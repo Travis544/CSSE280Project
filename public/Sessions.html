@@ -11,6 +11,7 @@
 </head>
 
 <body>
+<<<<<<< HEAD
   <nav class="navbar navbar-dark fixed-top">
     <a class="navbar-brand" href="#">Sessions</a>
   </nav>
@@ -20,6 +21,82 @@
        
     
 
+=======
+  <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
+    <header class="bmd-layout-header">
+      <div class="navbar navbar-dark fixed-top bg-faded justify-content-start">
+        <button class="navbar-toggler" type="button" data-toggle="drawer" data-target="#dw-s2">
+          <span class="sr-only">Toggle drawer</span>
+          <i class="material-icons">menu</i>
+        </button>
+        <a class="navbar-brand" href="#">&nbsp;&nbsp;Exam Review Sessions</a>
+      </div>
+    </header>
+    <div id="dw-s2" class="bmd-layout-drawer bg-faded">
+      <header>
+        <a class="navbar-brand">Review Sessions</a>
+      </header>
+      <ul class="list-group">
+        <a id="menuShowAllSessions" class="list-group-item"><i class="material-icons">people_alt</i>Show all Sessions</a>
+        <a id="menuShowMySessions" class="list-group-item"><i class="material-icons">person</i>Show my Sessions</a>
+        <a id="menuSignOut" class="list-group-item"><i class="material-icons">login</i>Sign Out</a>
+      </ul>
+    </div>
+    <main class="bmd-layout-content">
+      <div id="listPage" class="container page-container">
+        <div id="sessionListContainer"></div>
+      </div>
+    </main>
+  </div>
+
+  <button id="fab" type="button" class="btn bmd-btn-fab" data-toggle="modal" data-target="#addQuoteDialog">
+    <i class="material-icons">add</i>
+  </button>
+  
+  <!-- Modals -->
+  <div class="modal fade" id="addSessionDialog" tabindex="-1" role="dialog" aria-labelledby="Add quote dialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Session</h5>
+        </div>
+        <div class="modal-body">
+          <div class="form-group bmd-form-group">
+            <label for="inputSessionName" class="bmd-label-floating">Session Name</label>
+            <input type="text" class="form-control" id="inputSessionName">
+            <span class="bmd-help">What movie is this quote from?</span>
+          </div>
+          <div class="form-group bmd-form-group">
+            <label for="inputCourseID" class="bmd-label-floating">Course ID</label>
+            <input type="text" class="form-control" id="inputCourseID">
+          </div>
+          <div class="form-group bmd-form-group">
+            <label for="inputDescription" class="bmd-label-floating">Session Description</label>
+            <input type="text" class="form-control" id="inputDescription">
+            <span class="bmd-help">What movie is this quote from?</span>
+          </div>
+          <div class="form-group bmd-form-group">
+            <label for="inputLocation" class="bmd-label-floating">Location/label>
+            <input type="text" class="form-control" id="inputLocation">
+            <span class="bmd-help">What movie is this quote from?</span>
+          </div>
+          <!-- <div class="input-append bootstrap-timepicker">
+            <input id="timepicker1" type="text" class="input-small">
+            <span class="add-on"><i class="icon-time"></i></span>
+          </div>
+          <div class="input-append bootstrap-timepicker">
+            <input id="timepicker1" type="text" class="input-small">
+            <span class="add-on"><i class="icon-time"></i></span>
+          </div> -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
+          <button id="submitAddQuote" type="button" class="btn btn-primary" data-dismiss="modal">CREATE</button>
+        </div>
+      </div>
+    </div>
+>>>>>>> refs/remotes/origin/main
   </div>
   <script src="scripts/jquery.min.js"></script>
   <script src="scripts/popper.js"></script>

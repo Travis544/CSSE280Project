@@ -105,7 +105,7 @@ rhit.ListPageController = class {
 
 	updateList(){
 		let newContainer=htmlToElement('<div id="sessionContainer"></div>')
-		let oldContainer=document.querySelector("#sessionContainer")
+		let oldContainer=document.querySelector("#sessionListContainer")
 	
 		for(let i=0; i<rhit.fbSessionManager.length; i++){
 		
@@ -189,6 +189,7 @@ rhit.FbSessionManager= class{
 
 
 rhit.checkForRedirects=function(){
+	//CHANGE ME-----automatically redirects to session page. Please change. 
 	if(document.querySelector("#loginPage")){
 		window.location.href="/Sessions.html"
 	}
