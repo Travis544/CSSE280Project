@@ -30,8 +30,7 @@ rhit.FB_KEY_LOCATION = "location";
 rhit.FB_KEY_SESSION_NAME = "name";
 rhit.FB_KEY_ENDTIME = "endTime";
 rhit.FB_KEY_STARTTIME = "startTime";
-
-rhit.KEY_UID = "uid";
+rhit.FB_KEY_CREATEDBY = "createdBy";
 
 rhit.fbAuthManager = null;
 
@@ -66,18 +65,18 @@ rhit.ClassName = class {
     
 rhit.ListPageController = class {
 	constructor() {
-		document.querySelector("#menuShowMySessions").addEventListener("click", (event) => {
-			//console.log("Show only my quotes");
-			window.location.href = `/list.html?uid=${rhit.fbAuthManager.uid}`;
-		});
-		document.querySelector("#menuShowAllSessions").addEventListener("click", (event) => {
-			//console.log("Show all quotes");
-			window.location.href = "/list.html";
-		});
-		document.querySelector("#menuSignOut").addEventListener("click", (event) => {
-			//console.log("Sign out");
-			rhit.fbAuthManager.signOut();
-		});
+		// document.querySelector("#menuShowMySessions").addEventListener("click", (event) => {
+		// 	//console.log("Show only my quotes");
+		// 	window.location.href = `/list.html?uid=${rhit.fbAuthManager.uid}`;
+		// });
+		// document.querySelector("#menuShowAllSessions").addEventListener("click", (event) => {
+		// 	//console.log("Show all quotes");
+		// 	window.location.href = "/list.html";
+		// });
+		// document.querySelector("#menuSignOut").addEventListener("click", (event) => {
+		// 	//console.log("Sign out");
+		// 	rhit.fbAuthManager.signOut();
+		// });
 
 		// document.querySelector("#submitAddQuote").onclick = (event) => {
 		// };
@@ -86,8 +85,8 @@ rhit.ListPageController = class {
 			const courseId = document.querySelector("#inputCourseID").value;
 			const description = document.querySelector("#inputDescription").value;
 			const location = document.querySelector("#inputLocation").value;
-
-			rhit.fbMovieQuotesManager.add(quote, movie);
+			
+			rhit.fbSessionsManager.add(sessionName, courseId, description, location);
 		});
 
 		$("#addSessionDialog").on("show.bs.modal", (event) => {
@@ -99,22 +98,23 @@ rhit.ListPageController = class {
 		});
 		$("#addSessionDialog").on("shown.bs.modal", (event) => {
 			// Post animation
-			document.querySelector("#inputQuote").focus();
+			document.querySelector("#inputSessionName").focus();
 		});
 
 		// Start listening!
-		rhit.fbSessionManager.beginListening(this.updateList.bind(this));
+		rhit.fbSessionsManager.beginListening(this.updateList.bind(this));
 
 	}
 
 
 	updateList(){
+		console.log("UPDATED")
 		let newContainer=htmlToElement('<div id="sessionContainer"></div>')
 		let oldContainer=document.querySelector("#sessionListContainer")
-	
-		for(let i=0; i<rhit.fbSessionManager.length; i++){
+		console.log(rhit.fbSessionsManager.length)
+		for(let i=0; i<rhit.fbSessionsManager.length; i++){
 		
-			let sessionCard=this._createSessionCard(rhit.fbSessionManager.getSessionAtIndex(i))
+			let sessionCard=this._createSessionCard(rhit.fbSessionsManager.getSessionAtIndex(i))
 			newContainer.appendChild(sessionCard)
 		}
 		oldContainer.hidden=true;
@@ -122,7 +122,6 @@ rhit.ListPageController = class {
 		oldContainer.parentElement.appendChild(newContainer)
 		
 	}
-
 	_createSessionCard(session){
 		return htmlToElement(` <div class="card">
 		<div class="card-body">
@@ -146,12 +145,14 @@ rhit.FbSessionsManager = class {
 
 	add(sessionName, courseId, description, location) {
 		// Add a new document with a generated id.
+	
 		this._ref.add({
 				[rhit.FB_KEY_SESSION_NAME] : sessionName,
 				[rhit.FB_KEY_COURSEID]: courseId,
 				[rhit.FB_KEY_DESCRIPTION]: description,
 				[rhit.FB_KEY_LOCATION]: location,
-				[rhit.KEY_UID]: rhit.fbAuthManager.uid,
+				[rhit.FB_KEY_CREATEDBY]: rhit.fbAuthManager._user.uid,
+
 			})
 			.then(function (docRef) {
 				console.log("Document written with ID: ", docRef.id);
@@ -163,17 +164,19 @@ rhit.FbSessionsManager = class {
 
 	beginListening(changeListener) {
 
-		let query = this._ref.orderBy(rhit.FB_KEY_LAST_TOUCHED, "desc").limit(50);
+		let query = this._ref
+		//.orderBy('startTime', "desc")
+
 		if (this._uid) {
-			query = query.where(rhit.KEY_UID, "==", this._uid);
+			query = query.where("createdBy", "==", this._uid);
+			console.log("DID THIS")
 		}
 
 		this._unsubscribe = query.onSnapshot((querySnapshot) => {
-			console.log("MovieQuote update!");
+
 			this._documentSnapshots = querySnapshot.docs;
-			// querySnapshot.forEach((doc) => {
-			// 	console.log(doc.data());
-			// });
+			console.log(querySnapshot.docs)
+			console.log("Change listener!")
 			changeListener();
 		});
 	}
@@ -186,56 +189,7 @@ rhit.FbSessionsManager = class {
 		return this._documentSnapshots.length;
 	}
 
-	getMovieQuoteAtIndex(index) {
-		const docSnapshot = this._documentSnapshots[index];
-		const mq = new rhit.MovieQuote(docSnapshot.id,
-			docSnapshot.get(rhit.FB_KEY_QUOTE),
-			docSnapshot.get(rhit.FB_KEY_MOVIE));
-		return mq;
-	}
-}
-
-
-rhit.Session=class{
-	constructor(attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime){
-		this.attendees=attendees
-		this.courseID=cID
-		this.name=name
-		this.description=description
-		this.isTAProfessorIn=isTAProfessorIn
-		this.isTaProfessorNeeded=isTaProfessorNeeded
-		this.location=location
-		this.startTime=startTime
-		this.endTime=endTime
-	}
-}
-
-rhit.FbSessionManager= class{
-	constructor() {
-		this._documentSnapshots = [];
-		//get the session collection
-		this._ref=firebase.firestore().collection(rhit.FB_COLLECTION_SESSION);
-		this._unsubscribe=null
-	  }
-
-	  beginListening(changeListener) {  
-		let query=this._ref.limit(50);
-		this._unsubscribe=query
-		.onSnapshot((querySnapshot)=> {
-		this._documentSnapshots=querySnapshot.docs
-     	changeListener();
-      });
-	  }
-
-	  stopListening() {  
-		this._unsubscribe();
-	  }
-
-	  get length(){
-		  return this._documentSnapshots.length
-	  }
-
-	  getSessionAtIndex(index){
+	getSessionAtIndex(index){
 		const attendees=this._documentSnapshots[index].get(rhit.FB_KEY_ATTENDEES)
 		const courseID=this._documentSnapshots[index].get(rhit.FB_KEY_COURSEID)
 		const descrip=this._documentSnapshots[index].get(rhit.FB_KEY_DESCRIPTION)
@@ -245,86 +199,122 @@ rhit.FbSessionManager= class{
 		const name=this._documentSnapshots[index].get(rhit.FB_KEY_NAME)
 		const startTime=this._documentSnapshots[index].get(rhit.FB_KEY_STARTTIME)
 		const endTime=this._documentSnapshots[index].get(rhit.FB_KEY_ENDTIME)
+		const createdBy=this._documentSnapshots[index].get('createdBy')
 		//attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime
-		return new rhit.Session(attendees,courseID, descrip, isTaProfessorIn, isTaProfessorNeeded,location, name, startTime, endTime)
+		return new rhit.Session(attendees,courseID, descrip, isTaProfessorIn, isTaProfessorNeeded,location, name, startTime, endTime, createdBy)
 	  }
-
 }
 
-rhit.FbAuthManager = class {
-	constructor() {
+
+rhit.Session=class{
+	constructor(attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime, createdBy){
+		this.attendees=attendees
+		this.courseID=cID
+		this.name=name
+		this.description=description
+		this.isTAProfessorIn=isTAProfessorIn
+		this.isTaProfessorNeeded=isTaProfessorNeeded
+		this.location=location
+		this.startTime=startTime
+		this.endTime=endTime
+		this.createdBy=createdBy
+	}
+}
+
+
+//
+
+
+rhit.FbAuthManager=class{
+	constructor(){
 		this._user = null;
 	}
-	beginListening(changeListener) {
+
+  beginListening(changeListener) {
 		firebase.auth().onAuthStateChanged((user) => {
-			this._user = user;
-			changeListener();
-		});
+			  this._user=user
+			changeListener();	
+		  });
 	}
+
 	signIn() {
-		Rosefire.signIn("1d439b1e-5cee-4fd1-aed7-298a31cc4793", (err, rfUser) => {
+		//Pass in a registry function
+		//firebase need to trust  
+		//generate key from firebase, give it to rosefire to generate a registry token
+		///give to firebase and sign in to firebase
+		Rosefire.signIn("fbf1b32a-f784-485a-8ba3-844cf95f98dc", (err, rfUser) => {
 			if (err) {
-				console.log("Rosefire error!", err);
-				return;
+			  console.log("Rosefire error!", err);
+			  return;
 			}
+		
 			console.log("Rosefire success!", rfUser);
-
-			// Next use the Rosefire token with Firebase auth.
-			firebase.auth().signInWithCustomToken(rfUser.token).catch((error) => {
-				if (error.code === 'auth/invalid-custom-token') {
-					console.log("The token you provided is not valid.");
-				} else {
-					console.log("signInWithCustomToken error", error.message);
-				}
+			firebase.auth().signInWithCustomToken(rfUser.token)
+			.catch((error) => {
+			var errorCode = error.code;
+			var errorMessage = error.message;
+			console.log("Login error", errorCode, errorMessage)
+			if(errorCode=='auth/invalid-custom-token'){
+				alert('The token you provided is not valid')
+			}else{
+				console.error("Custom auth error", errorCode, errorMessage);
+			}
 			});
+		  
 		});
+	}
 
+	get isSignedIn(){
+		return !!this._user
+	}
 
-	}
-	signOut() {
-		firebase.auth().signOut();
-	}
-	get uid() {
-		return this._user.uid;
-	}
-	get isSignedIn() {
-		return !!this._user;
-	}
 }
 
-rhit.LoginPageController = class {
+rhit.LoginPageController=class{
 	constructor() {
-		document.querySelector("#rosefireButton").onclick = (event) => {
+		document.querySelector("#rosefireButton").addEventListener('click',()=>{
 			rhit.fbAuthManager.signIn();
-		};
+		})
 	}
 }
+
 
 rhit.checkForRedirects = function () {
 	// Redirects
 	if (document.querySelector("#loginPage") && rhit.fbAuthManager.isSignedIn) {
-		window.location.href = "/list.html";
+		window.location.href = "/Sessions.html";
 	}
-	if (!document.querySelector("#loginPage") && !rhit.fbAuthManager.isSignedIn) {
-		window.location.href = "/";
-	}
+
+	
 }
 
-
-rhit.checkForRedirects=function(){
-	//CHANGE ME-----automatically redirects to session page. Please change. 
+rhit.initializePage = function(){
 	if(document.querySelector("#loginPage")){
-		window.location.href="/Sessions.html"
+		rhit.loginPageController=new rhit.LoginPageController();
 	}
+
+	if(document.querySelector("#sessionListContainer")&&rhit.fbAuthManager.isSignedIn){
+		rhit.fbSessionsManager=new rhit.FbSessionsManager()
+		new rhit.ListPageController()
+	
+	}
+
+
 }
+
                                         
 /* Main */
 /** function and class syntax examples */
 rhit.main = function () {
+	rhit.fbAuthManager=new rhit.FbAuthManager()
+	rhit.fbAuthManager.beginListening(()=>{
+		rhit.checkForRedirects()
+		rhit.initializePage()
+	})
 	console.log("Ready");
 	rhit.checkForRedirects()
-	rhit.fbSessionManager=new rhit.FbSessionManager()
-	new rhit.ListPageController()
+	
+	
 }
 
 rhit.main();

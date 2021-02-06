@@ -13,7 +13,7 @@ body {
 
 #fab {
     background: #800000;
-    bottom: 10px;
+    bottom:  70px;
     color: white;
     position: fixed;
     right: 10px;
@@ -47,6 +47,12 @@ body {
     max-width: 350px;
 }
 
+
+#sessionListContainer{
+    overflow-y:auto;
+}
+
+
 #rosefireButton {
     display: block;
     margin: 60px auto;
@@ -77,4 +83,30 @@ body {
 
 #menuEdit, #menuDelete {
     display: none;
+}
+
+#tabs{
+    position:fixed;
+    background-color: #800000;
+    left: 50%;
+    transform: translate(-50%, 0);
+    bottom: 5px;
+    z-index: 999;
+    width: 98%;
+    
+}
+
+#tabs .nav-content{
+    color:white;
+    text-align: center;
+
+    
+}
+
+#reviewSessions{
+   
+    margin:auto;
+}
+#mySessions{
+    margin:auto;    
 }
