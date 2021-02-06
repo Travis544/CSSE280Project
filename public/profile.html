@@ -30,8 +30,8 @@
         <a class="navbar-brand">My Profile</a>
       </header>
       <ul class="list-group">
-        <a id="menuShowAllQuotes" class="list-group-item"><i class="material-icons">people_alt</i>Show all quotes</a>
-        <a id="menuShowMyQuotes" class="list-group-item"><i class="material-icons">person</i>Show my quotes</a>
+        <a id="menuShowAllSessions" class="list-group-item"><i class="material-icons">people_alt</i>Show all Sessions</a>
+        <a id="menuShowMySessions" class="list-group-item"><i class="material-icons">person</i>Show my Sessions</a>
         <a id="menuSignOut" class="list-group-item"><i class="material-icons">logout</i>Sign Out</a>
       </ul>
     </div>
@@ -46,14 +46,96 @@
               <label for="inputName">Name</label>
               <input type="text" class="form-control" id="inputName">
             </div>
+            <div class="form-group bmd-form-group">
+              <label for="inputName">Year</label>
+              <input type="text" class="form-control" id="inputYear">
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="inputName">Major</label>
+              <input type="text" class="form-control" id="inputMajor">
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="inputName">Phone Numer</label>
+              <input type="text" class="form-control" id="inputPhoneNumber">
+            </div>
           </div>
+          
         </div>
         <div class="text-right">
-          <button type="button" id="submitName" href="/list.html" class="btn">Done</a>
+          <button type="button" id="submitProfile" href="/Sessions.html" class="btn">Done</a>
+        </div>
+        <div class="card" id="ongoingCourses">
+          <h5 class="text-center">Onging Courses</h5>
+          <div class= "container page-container" style="width: 18rem;"> 
+          </div>
+          <div class="text-center">
+            <button type="button" id="ongoingCourseAddBtn" class="btn b" 
+            data-toggle="modal" data-target="#addOngoingCourseDialog">Add</button>
+            <button type="button" id="ongoingCourseEditBtn" class="btn b" 
+            data-toggle="modal" data-target="#addSessionDialog">Edit</button>
+          </div>
+        </div>
+        <div class="card" id="takenCourses">
+          <h5 class="text-center">Taken Courses</h5>
+          <div class= "container page-container" style="width: 18rem;"> </div>
+          <div class="text-center">
+            <button type="button" id="takenCourseAddBtn" class="btn b" 
+            data-toggle="modal" data-target="#addSessionDialog">Add</button>
+            <button type="button" id="takenCourseEditBtn" class="btn b" 
+            data-toggle="modal" data-target="#addSessionDialog">Edit</button>
+          </div>
         </div>
       </div>
     </main>
   </div>
+
+  <!-- Modals -->
+  <div class="modal fade" id="addOngoingCourseDialog" tabindex="-1" role="dialog" aria-labelledby="Add Ongoing Course dialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Course</h5>
+        </div>
+        <div class="modal-body">
+          <div class="form-group bmd-form-group">
+            <label for="inputOngoingCourseID" class="bmd-label-floating">Course ID</label>
+            <input type="text" class="form-control" id="inputOngoingCourseID">
+            <span class="bmd-help"></span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
+          <button id="submitAddSession" type="button" class="btn btn-primary" data-dismiss="modal">CREATE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal fade" id="addTakenCourseDialog" tabindex="-1" role="dialog" aria-labelledby="Add Taken Course dialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Course</h5>
+        </div>
+        <div class="modal-body">
+          <div class="form-group bmd-form-group">
+            <label for="inputTakenCourseID" class="bmd-label-floating">Course ID</label>
+            <input type="text" class="form-control" id="inputTakenCourseID">
+            <span class="bmd-help"></span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
+          <button id="submitAddSession" type="button" class="btn btn-primary" data-dismiss="modal">CREATE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <script src="scripts/jquery.min.js"></script>
   <script src="scripts/popper.js"></script>
   <script src="scripts/bootstrap-material-design.js"></script>

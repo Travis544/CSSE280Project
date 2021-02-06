@@ -219,3 +219,53 @@ rhit.main = function () {
 };
 
 rhit.main();
+
+
+rhit.OngoingCoursesController = class {
+	constructor() {
+		document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+			const courseID = document.querySelector("#inpuOtngoingCourseID").value;
+		});
+
+		$("#addOngoingCourseDialog").on("show.bs.modal", (event) => {
+			// Pre animation
+			document.querySelector("#inpuOtngoingCourseID").value = "";
+		});
+		$("#addSessionDialog").on("shown.bs.modal", (event) => {
+			// Post animation
+			document.querySelector("#inputSessionName").focus();
+		});
+
+		// Start listening!
+
+	}
+
+
+	// updateList(){
+	// 	console.log("UPDATED")
+	// 	let newContainer=htmlToElement('<div id="sessionContainer"></div>')
+	// 	let oldContainer=document.querySelector("#sessionListContainer")
+	// 	console.log(rhit.fbSessionsManager.length)
+	// 	for(let i=0; i<rhit.fbSessionsManager.length; i++){
+		
+	// 		let sessionCard=this._createSessionCard(rhit.fbSessionsManager.getSessionAtIndex(i))
+	// 		newContainer.appendChild(sessionCard)
+	// 	}
+	// 	oldContainer.hidden=true;
+	// 	oldContainer.removeAttribute('id')
+	// 	oldContainer.parentElement.appendChild(newContainer)
+		
+	// }
+	// _createSessionCard(session){
+	// 	return htmlToElement(` <div class="card">
+	// 	<div class="card-body">
+	// 	<h5 class="card-title">${session.name}</h5>
+	// 	<h6 class="From" ${session.startTime} To ${session.endTime}</h6>
+	// 	<p class="card-text">${session.description}</p>
+	// 	<button type="button" id="sessionJoinButton" class="btn b">Join</button>
+	// 	<button type="button" id="sessionQuitButton" class="btn b">Quit</button>
+	// 	</div>
+	// </div>`)
+
+	
+}

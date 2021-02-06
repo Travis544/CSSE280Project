@@ -1,4 +1,4 @@
-/**
+ /**
  * @fileoverview
  * Provides the JavaScript interactions for all pages.
  *
@@ -6,17 +6,18 @@
  * PUT_YOUR_NAME_HERE
  */
 
+
 /** namespace. */
 var rhit = rhit || {};
 
 rhit.FB_COLLECTION_USER = "User";
 rhit.FB_KEY_IDENTITY = "identity";
 rhit.FB_KEY_JOINEDSESSIONIDS = "joinedSessionIds";
-rhit.FB_KEY_MAJO = "major";
+rhit.FB_KEY_MAJOR = "major";
 rhit.FB_KEY_NAME = "name";
 rhit.FB_KEY_ONGOINGCOURSEIDS = "ongoingCourseIds";
 rhit.FB_KEY_PHONENUMBER = "phoneNumber";
-rhit.FB_KEY_PHOTOURL = "photoUrl";
+rhit.FB_KEY_PHOTO_URL = "photoUrl";
 rhit.FB_KEY_TAKENCOURSEIDS = "takenCourseIds";
 rhit.FB_KEY_YEAR = "year";
 
@@ -56,6 +57,35 @@ rhit.ClassName = class {
 
 	methodName() {
 
+	}
+}
+
+rhit.SideNavController = class {
+	constructor() {
+		const profileItem = document.querySelector("#menuGoToProfilePage");
+		if (profileItem) {
+			profileItem.addEventListener("click", (event) => {
+				window.location.href = "/profile.html";
+			});
+		}
+		const showAllSessionsItem = document.querySelector("#menuShowAllSessions");
+		if (showAllSessionsItem) {
+			showAllSessionsItem.addEventListener("click", (event) => {
+				window.location.href = "/list.html";
+			});
+		}
+		const showMySessionsItem = document.querySelector("#menuShowMySessions");
+		if (showMySessionsItem) {
+			showMySessionsItem.addEventListener("click", (event) => {
+				window.location.href = `/list.html?uid=${rhit.fbAuthManager.uid}`;
+			});
+		}
+		const signOutItem = document.querySelector("#menuSignOut");
+		if (signOutItem) {
+			signOutItem.addEventListener("click", (event) => {
+				rhit.fbAuthManager.signOut();
+			});
+		}
 	}
 }
 	
@@ -228,6 +258,7 @@ rhit.Session=class{
 rhit.FbAuthManager=class{
 	constructor(){
 		this._user = null;
+		this._name=""
 	}
 
   beginListening(changeListener) {
@@ -247,7 +278,7 @@ rhit.FbAuthManager=class{
 			  console.log("Rosefire error!", err);
 			  return;
 			}
-		
+			this._name=rfUser.name
 			console.log("Rosefire success!", rfUser);
 			firebase.auth().signInWithCustomToken(rfUser.token)
 			.catch((error) => {
@@ -264,9 +295,26 @@ rhit.FbAuthManager=class{
 		});
 	}
 
+	signOut(){
+			firebase.auth().signOut().catch((error) => {
+				// An error happened.
+				console.log("Error happened")
+			  });
+	}
+
 	get isSignedIn(){
 		return !!this._user
 	}
+
+	get uid(){
+		return this._user.uid
+	}
+	 
+	get name(){
+		return this._name
+	}
+	
+	
 
 }
 
@@ -285,8 +333,188 @@ rhit.checkForRedirects = function () {
 		window.location.href = "/Sessions.html";
 	}
 
-	
+	if (document.querySelector("#sessionPageContainer") &&!rhit.fbAuthManager.isSignedIn) {
+		window.location.href = "/";
+	}
+
+	if (document.querySelector("#profilePage") &&!rhit.fbAuthManager.isSignedIn) {
+		window.location.href = "/";
+	}
+
+
 }
+
+rhit.FbUserManager = class {
+
+		constructor() {
+			
+			this._collectoinRef = firebase.firestore().collection(rhit.FB_COLLECTION_USER);
+			this._document = null;
+		}
+		beginListening(uid, changeListener) {
+			console.log("Listening for uid", uid);
+			const userRef = this._collectoinRef.doc(uid);
+			this._unsubscribe = userRef.onSnapshot((doc) => {
+				if (doc.exists) {
+					this._document = doc;
+
+					if (changeListener) {
+						changeListener();
+					}
+				} else {
+					console.log("User does not exist");
+				}
+			});
+		}
+	
+		get isListening() {
+			return !!this._unsubscribe;
+		}
+	
+	
+		stopListening() {
+			this._unsubscribe();
+		}
+	
+		addNewUserMaybe(uid, name, photoUrl) {
+			// First check if the user already exists.
+			console.log("Checking User for uid = ", uid);
+
+			const userRef = this._collectoinRef.doc(uid);
+			return userRef.get().then((document) => {
+				if (document.exists) {
+					return false; // This will be the parameter to the next .then callback function.
+				} else {
+					// We need to create this user.
+					console.log("Creating the user!");
+					console.log(name);
+					return userRef.set({
+						[rhit.FB_KEY_NAME]: name,
+						//default to no url first
+						[rhit.FB_KEY_PHOTO_URL]: "",
+						[rhit.FB_KEY_IDENTITY]: "Student",
+						[rhit.FB_KEY_JOINEDSESSIONIDS]: [],
+						[rhit.FB_KEY_MAJOR]:"Update this",
+						[rhit.FB_KEY_ONGOINGCOURSEIDS]:[],
+						[rhit.FB_KEY_TAKENCOURSEIDS]:[]
+						[rhit.FB_KEY_YEAR]="years"
+
+					}).then(() => {
+						return true;
+					});
+				}
+			});
+		}
+	
+		uploadPhotoToStorage(file) {
+			const metadata = {
+				"content-type": file.type
+			};
+			const storageRef = firebase.storage().ref().child(rhit.FB_COLLECTION_USER).child(rhit.fbAuthManager.uid);
+	
+			// const nextAvailableKey = firebase.storage().ref().child(rhit.FB_COLLECTION_USERS).push({}).key;
+			// const storageRef = firebase.storage().ref().child(rhit.FB_COLLECTION_USERS).child(nextAvailableKey);
+	
+			storageRef.put(file, metadata).then((uploadSnapshot) => {
+				console.log("Upload is complete!", uploadSnapshot);
+	
+				// Handle successful uploads on complete
+				// For instance, get the download URL: https://firebasestorage.googleapis.com/...
+				storageRef.getDownloadURL().then((downloadURL) => {
+					console.log("File available at", downloadURL);
+					rhit.fbUserManager.updatePhotoUrl(downloadURL);
+				});
+			});
+			console.log("Uploading", file.name);
+		}
+	
+		updatePhotoUrl(photoUrl) {
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			userRef.update({
+					[rhit.FB_KEY_PHOTO_URL]: photoUrl
+				})
+				.then(() => {
+					console.log("Document successfully updated with photoUrl!");
+				})
+				.catch(function (error) {
+					console.error("Error updating document: ", error);
+				});
+		}
+	
+		updateName(name) {
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			return userRef.update({
+					[rhit.FB_KEY_NAME]: name
+				})
+				.then(() => {
+					console.log("Document successfully updated with name!");
+				})
+				.catch(function (error) {
+					console.error("Error updating document: ", error);
+				});
+		}
+	
+		get name() {
+			return this._document.get(rhit.FB_KEY_NAME);
+		}
+		get photoUrl() {
+			return this._document.get(rhit.FB_KEY_PHOTO_URL);
+		}
+	}
+
+
+
+rhit.OngoingCoursesController = class {
+	constructor() {
+		document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+			const courseID = document.querySelector("#inpuOtngoingCourseID").value;
+		});
+		$("#addOngoingCourseDialog").on("show.bs.modal", (event) => {
+			document.querySelector("#inpuOtngoingCourseID").value = "";
+		});
+		$("#addSessionDialog").on("shown.bs.modal", (event) => {
+			document.querySelector("#inputSessionName").focus();
+		});
+	}
+}
+
+
+rhit.ProfilePageController = class {
+	constructor() {
+		// Profile page actions.
+		document.querySelector("#submitPhoto").addEventListener("click", (event) => {
+			document.querySelector("#fileInput").click();
+		});
+
+		document.querySelector("#fileInput").addEventListener("change", (event) => {
+			//console.log("change worked");
+			const file = event.target.files[0]
+			console.log("Selected File", file);
+			rhit.fbUserManager.uploadPhotoToStorage(file);
+		});
+		document.querySelector("#submitProfile").addEventListener("click", (event) => {
+			const name = document.querySelector("#inputName").value;
+			console.log("name", name);
+			rhit.fbUserManager.updateName(name).then(() => {
+				window.location.href = "/Sessions.html"
+			});
+		});
+		rhit.fbUserManager.beginListening(rhit.fbAuthManager.uid, this.updateView.bind(this));
+	}
+
+	updateView() {
+		// console.log('rhit.fbUserManager.name :>> ', rhit.fbUserManager.name);
+		// console.log('rhit.fbUserManager.photoUrl :>> ', rhit.fbUserManager.photoUrl);
+		document.querySelector("#inputName").value = rhit.fbUserManager.name;
+		if (rhit.fbUserManager.photoUrl) {
+			document.querySelector("#profilePhoto").src = rhit.fbUserManager.photoUrl;
+		}
+	}
+
+}
+	
+
+
 
 rhit.initializePage = function(){
 	if(document.querySelector("#loginPage")){
@@ -294,25 +522,70 @@ rhit.initializePage = function(){
 	}
 
 	if(document.querySelector("#sessionListContainer")&&rhit.fbAuthManager.isSignedIn){
+		new rhit.SideNavController();
 		rhit.fbSessionsManager=new rhit.FbSessionsManager()
 		new rhit.ListPageController()
-	
+		
+		//const checkValue=document.querySelector("#taProfCheckBox").checked
+		
 	}
+	
+	if(document.querySelector("#profilePage")){
+		new rhit.SideNavController();
+		new rhit.ProfilePageController();
+		new rhit.OngoingCoursesController();
+	}
+
+	
 
 
 }
 
+rhit.createUserObjectIfNeeded=function(){
+	//return a promise to have everything wait for user creation.
+	
+		//check if use might be new, if new create the user
+			//return a promise to have everything wait for user creation.
+	return new Promise((resolve, reject)=>{
+		//check if use might be new, if new create the user
+		if(!rhit.fbAuthManager.isSignedIn){
+			resolve(false);
+			return
+		}
+
+		if(!document.querySelector("#loginPage")){
+			resolve(false)
+			return
+		}
+
+		rhit.fbUserManager.addNewUserMaybe(rhit.fbAuthManager.uid, rhit.fbAuthManager.name, "").then((isNewUser)=>{
+			resolve(isNewUser)
+			return
+		})
+		// if(document.querySelector("#loginPage")&&rhit.fbAuthManager.isSignedIn){
+		// 	rhit.fbUserManager.addNewUserMaybe(rhit.fbAuthManager.uid, rhit.fbAuthManager.name, rhit.fbAuthManager.photoUrl).then((isUserNew)=>{
+		// 		resolve(isUserNew)
+		// 		return
+		// 	})
+		// }else{
+		// 	resolve(false)
+		// 	return
+		// }
+	})
+}
                                         
 /* Main */
 /** function and class syntax examples */
 rhit.main = function () {
-	rhit.fbAuthManager=new rhit.FbAuthManager()
+	rhit.fbAuthManager=new rhit.FbAuthManager();
+	rhit.fbUserManager = new rhit.FbUserManager();
 	rhit.fbAuthManager.beginListening(()=>{
-		rhit.checkForRedirects()
-		rhit.initializePage()
+		rhit.createUserObjectIfNeeded().then((isNewUser)=>{	
+			rhit.checkForRedirects()
+			rhit.initializePage()
+		})
 	})
-	console.log("Ready");
-	rhit.checkForRedirects()
+
 	
 	
 }
