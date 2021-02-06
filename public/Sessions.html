@@ -12,7 +12,7 @@
 
 <body>
 
-  <nav class="navbar navbar-dark fixed-top">
+  <!-- <nav class="navbar navbar-dark fixed-top">
     <a class="navbar-brand" href="#">Sessions</a>
   </nav>
   <div id="sessionPage" class="container page-container">
@@ -27,11 +27,11 @@
       <li class="nav-item" id="mySessions">
         <a class="nav-link  nav-content"   href="#">My Sessions</a>
       </li>
-    </ul>
+    </ul> -->
     
 
 
-  <!-- <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
+  <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
     <header class="bmd-layout-header">
       <div class="navbar navbar-dark fixed-top bg-faded justify-content-start">
         <button class="navbar-toggler" type="button" data-toggle="drawer" data-target="#dw-s2">
@@ -47,9 +47,10 @@
         <a class="navbar-brand">Review Sessions</a>
       </header>
       <ul class="list-group">
+        <a id="menuGoToProfilePage" class="list-group-item"><i class="material-icons">account_circle</i>My profile</a>
         <a id="menuShowAllSessions" class="list-group-item"><i class="material-icons">people_alt</i>Show all Sessions</a>
         <a id="menuShowMySessions" class="list-group-item"><i class="material-icons">person</i>Show my Sessions</a>
-        <a id="menuSignOut" class="list-group-item"><i class="material-icons">login</i>Sign Out</a>
+        <a id="menuSignOut" class="list-group-item"><i class="material-icons">logout</i>Sign Out</a>
       </ul>
     </div>
     <main class="bmd-layout-content">
@@ -57,7 +58,7 @@
         <div id="sessionListContainer"></div>
       </div>
     </main>
-  </div> -->
+  </div>
 
   <button id="fab" type="button" class="btn bmd-btn-fab" data-toggle="modal" data-target="#addSessionDialog">
     <i class="material-icons">add</i>
