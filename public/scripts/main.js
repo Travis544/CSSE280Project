@@ -453,6 +453,12 @@ rhit.FbUserManager = class {
 					console.error("Error updating document: ", error);
 				});
 		}
+
+		JoinSession(){
+
+		}
+
+
 	
 		get name() {
 			return this._document.get(rhit.FB_KEY_NAME);
@@ -460,6 +466,8 @@ rhit.FbUserManager = class {
 		get photoUrl() {
 			return this._document.get(rhit.FB_KEY_PHOTO_URL);
 		}
+
+		
 	}
 
 
