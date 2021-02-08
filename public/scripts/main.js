@@ -71,13 +71,13 @@ rhit.SideNavController = class {
 		const showAllSessionsItem = document.querySelector("#menuShowAllSessions");
 		if (showAllSessionsItem) {
 			showAllSessionsItem.addEventListener("click", (event) => {
-				window.location.href = "/list.html";
+				window.location.href = "/Sessions.html";
 			});
 		}
 		const showMySessionsItem = document.querySelector("#menuShowMySessions");
 		if (showMySessionsItem) {
 			showMySessionsItem.addEventListener("click", (event) => {
-				window.location.href = `/list.html?uid=${rhit.fbAuthManager.uid}`;
+				window.location.href = `/Sessions.html?uid=${rhit.fbAuthManager.uid}`;
 			});
 		}
 		const signOutItem = document.querySelector("#menuSignOut");
@@ -454,12 +454,45 @@ rhit.FbUserManager = class {
 				});
 		}
 
-		JoinSession(){
-
+		updateYear(year) {
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			return userRef.update({
+					[rhit.FB_KEY_YEAR]: year
+				})
+				.then(() => {
+					console.log("Document successfully updated with name!");
+				})
+				.catch(function (error) {
+					console.error("Error updating document: ", error);
+				});
+		}
+				
+		updateMajor(major) {
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			return userRef.update({
+					[rhit.FB_KEY_MAJOR]: major
+				})
+				.then(() => {
+					console.log("Document successfully updated with name!");
+				})
+				.catch(function (error) {
+					console.error("Error updating document: ", error);
+				});
 		}
 
+		updatePhoneNum(phoneNum) {
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			return userRef.update({
+					[rhit.FB_KEY_PHONENUMBER]: phoneNum
+				})
+				.then(() => {
+					console.log("Document successfully updated with name!");
+				})
+				.catch(function (error) {
+					console.error("Error updating document: ", error);
+				});
+		}
 
-	
 		get name() {
 			return this._document.get(rhit.FB_KEY_NAME);
 		}
@@ -467,7 +500,16 @@ rhit.FbUserManager = class {
 			return this._document.get(rhit.FB_KEY_PHOTO_URL);
 		}
 
-		
+		get year() {
+			return this._document.get(rhit.FB_KEY_YEAR);
+		}
+		get phoneNum() {
+			return this._document.get(rhit.FB_KEY_PHONENUMBER);
+		}
+
+		get major() {
+			return this._document.get(rhit.FB_KEY_MAJOR);
+		}
 	}
 
 
@@ -500,9 +542,17 @@ rhit.ProfilePageController = class {
 			console.log("Selected File", file);
 			rhit.fbUserManager.uploadPhotoToStorage(file);
 		});
+
+		
 		document.querySelector("#submitProfile").addEventListener("click", (event) => {
 			const name = document.querySelector("#inputName").value;
+			const year = document.querySelector("#inputYear").value;
+			const major = document.querySelector("#inputMajor").value;
+			const phoneNum = document.querySelector("#inputPhoneNumber").value;
 			console.log("name", name);
+			rhit.fbUserManager.updateYear(year)
+			rhit.fbUserManager.updatePhoneNum(phoneNum)
+			rhit.fbUserManager.updateMajor(major)
 			rhit.fbUserManager.updateName(name).then(() => {
 				window.location.href = "/Sessions.html"
 			});
@@ -514,6 +564,9 @@ rhit.ProfilePageController = class {
 		// console.log('rhit.fbUserManager.name :>> ', rhit.fbUserManager.name);
 		// console.log('rhit.fbUserManager.photoUrl :>> ', rhit.fbUserManager.photoUrl);
 		document.querySelector("#inputName").value = rhit.fbUserManager.name;
+		document.querySelector("#inputYear").value = rhit.fbUserManager.year;
+		document.querySelector("#inputMajor").value = rhit.fbUserManager.major;
+		document.querySelector("#inputPhoneNumber").value = rhit.fbUserManager.phoneNum;
 		if (rhit.fbUserManager.photoUrl) {
 			document.querySelector("#profilePhoto").src = rhit.fbUserManager.photoUrl;
 		}
