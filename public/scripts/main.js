@@ -115,8 +115,8 @@ rhit.ListPageController = class {
 			const courseId = document.querySelector("#inputCourseID").value;
 			const description = document.querySelector("#inputDescription").value;
 			const location = document.querySelector("#inputLocation").value;
-			
-			rhit.fbSessionsManager.add(sessionName, courseId, description, location);
+			const isTaProfessorNeeded=document.querySelector("#taProfCheckBox").checked
+			rhit.fbSessionsManager.add(sessionName, courseId, description, location, isTaProfessorNeeded);
 		});
 
 		$("#addSessionDialog").on("show.bs.modal", (event) => {
@@ -153,15 +153,28 @@ rhit.ListPageController = class {
 		
 	}
 	_createSessionCard(session){
-		return htmlToElement(` <div class="card">
+		console.log(session.startTime)
+		let elem= htmlToElement(` <div class="card">
 		<div class="card-body">
-		<h5 class="card-title">${session.name}</h5>
-		<h6 class="From" ${session.startTime} To ${session.endTime}</h6>
-		<p class="card-text">${session.description}</p>
-		<button type="button" id="sessionJoinButton" class="btn b">Join</button>
-		<button type="button" id="sessionQuitButton" class="btn b">Quit</button>
+			<h5 class="card-title">${session.name}</h5>
+			<h6  class="card-text">  ${session.startTime} To ${session.endTime}</h6>
+			<p class="card-text">${session.description}</p>
+			<p class="card-text">Created By: ${session.createdBy}</p>
 		</div>
-	</div>`)
+		`)
+		
+		
+		let cardBody=elem.querySelector('.card-body');
+		
+		if(session.isTaProfessorIn){
+			cardBody.appendChild(htmlToElement('<p class="card-text">TA or Professor is in</p>'))
+		}else{
+			cardBody.appendChild(htmlToElement('<p class="card-text">TA and Professor both not joined</p>'))
+		}
+
+		cardBody.appendChild(htmlToElement('<button type="button" id="sessionJoinButton" class="btn b">Join</button>'))
+	
+		return elem
 	}
 }
 
@@ -173,7 +186,7 @@ rhit.FbSessionsManager = class {
 		this._unsubscribe = null;
 	}
 
-	add(sessionName, courseId, description, location) {
+	add(sessionName, courseId, description, location, isTaProfessorNeeded) {
 		// Add a new document with a generated id.
 	
 		this._ref.add({
@@ -182,6 +195,7 @@ rhit.FbSessionsManager = class {
 				[rhit.FB_KEY_DESCRIPTION]: description,
 				[rhit.FB_KEY_LOCATION]: location,
 				[rhit.FB_KEY_CREATEDBY]: rhit.fbAuthManager._user.uid,
+				[rhit.FB_KEY_ISTAPROFESSORNEEDED]: 	isTaProfessorNeeded
 
 			})
 			.then(function (docRef) {
@@ -269,6 +283,7 @@ rhit.FbAuthManager=class{
 	}
 
 	signIn() {
+		
 		//Pass in a registry function
 		//firebase need to trust  
 		//generate key from firebase, give it to rosefire to generate a registry token
@@ -350,6 +365,7 @@ rhit.FbUserManager = class {
 			
 			this._collectoinRef = firebase.firestore().collection(rhit.FB_COLLECTION_USER);
 			this._document = null;
+			this.ongoingCourses=null
 		}
 		beginListening(uid, changeListener) {
 			console.log("Listening for uid", uid);
@@ -357,9 +373,15 @@ rhit.FbUserManager = class {
 			this._unsubscribe = userRef.onSnapshot((doc) => {
 				if (doc.exists) {
 					this._document = doc;
-
+					this.ongoingCourses=doc.get("ongoingCourseIds")
 					if (changeListener) {
 						changeListener();
+
+					}
+
+					if(rhit.ongoingCoursesController){
+					
+						rhit.ongoingCoursesController.updateList()
 					}
 				} else {
 					console.log("User does not exist");
@@ -406,6 +428,20 @@ rhit.FbUserManager = class {
 			});
 		}
 	
+
+		updateOngoingCourses(courses){
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			return userRef.update({
+					[rhit.FB_KEY_ONGOINGCOURSEIDS]: courses
+				})
+				.then(() => {
+					console.log("Document successfully updated with name!");
+				})
+				.catch(function (error) {
+					console.error("Error updating document: ", error);
+				});
+		}
+
 		uploadPhotoToStorage(file) {
 			const metadata = {
 				"content-type": file.type
@@ -493,6 +529,8 @@ rhit.FbUserManager = class {
 				});
 		}
 
+		
+
 		get name() {
 			return this._document.get(rhit.FB_KEY_NAME);
 		}
@@ -510,23 +548,61 @@ rhit.FbUserManager = class {
 		get major() {
 			return this._document.get(rhit.FB_KEY_MAJOR);
 		}
+
+
 	}
 
 
 
-rhit.OngoingCoursesController = class {
-	constructor() {
-		document.querySelector("#submitAddSession").addEventListener("click", (event) => {
-			const courseID = document.querySelector("#inpuOtngoingCourseID").value;
-		});
-		$("#addOngoingCourseDialog").on("show.bs.modal", (event) => {
-			document.querySelector("#inpuOtngoingCourseID").value = "";
-		});
-		$("#addSessionDialog").on("shown.bs.modal", (event) => {
-			document.querySelector("#inputSessionName").focus();
-		});
+	rhit.OngoingCoursesController = class {
+		constructor() {
+			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+				//const courseID = document.querySelector("#inputOngoingCourseID").value;
+			});
+			$("#addOngoingCourseDialog").on("show.bs.modal", (event) => {
+				document.querySelector("#inputOngoingCourseID").value = "";
+			});
+			$("#addSessionDialog").on("shown.bs.modal", (event) => {
+				document.querySelector("#inputSessionName").focus();
+			});
+			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+				const courseID = document.querySelector("#inputOngoingCourseID").value;
+				let courses = rhit.fbUserManager.ongoingCourses;//ok
+				courses.push(courseID);
+				console.log("courses", courses);//can print
+				rhit.fbUserManager.updateOngoingCourses(courses).then(() => {
+					//window.location.href = "/profile.html"
+				});
+			});
+			
+		}
+
+		updateList(){
+			console.log("UPDATED")
+			let newContainer=htmlToElement('<div id="ongoingCourseContainer"></div>')
+			let oldContainer=document.querySelector("#ongoingCourseContainer")
+			let courses = rhit.fbUserManager.ongoingCourses;//error: get null property
+			for(let i=0; i<rhit.fbUserManager.ongoingCourses.length; i++){
+				console.log(rhit.fbUserManager.ongoingCourses[i]);
+				let courseCard=this._createCourseCard(rhit.fbUserManager.ongoingCourses[i])
+				newContainer.appendChild(courseCard)
+			}
+			oldContainer.hidden=true;
+			oldContainer.removeAttribute('id')
+			oldContainer.parentElement.appendChild(newContainer)
+			
+		}
+
+		_createCourseCard(courseID){
+			return htmlToElement(` <div class="card">
+			<div class="card-body">
+			<h5 class="card-title">${courseID}</h5>
+			<button type="button" id="dropButton" class="btn b">Drop</button>
+			<button type="button" id="finishQuitButton" class="btn b">Finish</button>
+			</div>
+		</div>`)
+		}
 	}
-}
 
 
 rhit.ProfilePageController = class {
@@ -587,14 +663,14 @@ rhit.initializePage = function(){
 		rhit.fbSessionsManager=new rhit.FbSessionsManager()
 		new rhit.ListPageController()
 		
-		//const checkValue=document.querySelector("#taProfCheckBox").checked
+	
 		
 	}
 	
 	if(document.querySelector("#profilePage")){
 		new rhit.SideNavController();
 		new rhit.ProfilePageController();
-		new rhit.OngoingCoursesController();
+		rhit.ongoingCoursesController=new rhit.OngoingCoursesController();
 	}
 
 	
