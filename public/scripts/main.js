@@ -4,7 +4,7 @@
  *
  * @author 
  * PUT_YOUR_NAME_HERE
- */
+
 
 
 /** namespace. */
@@ -154,6 +154,7 @@ rhit.ListPageController = class {
 	}
 	_createSessionCard(session){
 		console.log(session.startTime)
+	
 		let elem= htmlToElement(` <div class="card">
 		<div class="card-body">
 			<h5 class="card-title">${session.name}</h5>
@@ -163,15 +164,12 @@ rhit.ListPageController = class {
 		</div>
 		`)
 		
-		
 		let cardBody=elem.querySelector('.card-body');
-		
 		if(session.isTaProfessorIn){
 			cardBody.appendChild(htmlToElement('<p class="card-text">TA or Professor is in</p>'))
 		}else{
 			cardBody.appendChild(htmlToElement('<p class="card-text">TA and Professor both not joined</p>'))
 		}
-
 		cardBody.appendChild(htmlToElement('<button type="button" id="sessionJoinButton" class="btn b">Join</button>'))
 	
 		return elem
@@ -241,8 +239,20 @@ rhit.FbSessionsManager = class {
 		const isTaProfessorNeeded=this._documentSnapshots[index].get(rhit.FB_KEY_ISTAPROFESSORNEEDED)
 		const location=this._documentSnapshots[index].get(rhit.FB_KEY_LOCATION)
 		const name=this._documentSnapshots[index].get(rhit.FB_KEY_NAME)
-		const startTime=this._documentSnapshots[index].get(rhit.FB_KEY_STARTTIME)
-		const endTime=this._documentSnapshots[index].get(rhit.FB_KEY_ENDTIME)
+		
+		let startTime=this._documentSnapshots[index].get(rhit.FB_KEY_STARTTIME)
+		let endTime=this._documentSnapshots[index].get(rhit.FB_KEY_ENDTIME)
+		if(startTime){
+			startTime=startTime.toDate()
+		}else{
+			startTime=""
+		}
+		if(endTime){
+			endTime=endTime.toDate()
+		}else{
+			endTime=""
+		}
+
 		const createdBy=this._documentSnapshots[index].get('createdBy')
 		//attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime
 		return new rhit.Session(attendees,courseID, descrip, isTaProfessorIn, isTaProfessorNeeded,location, name, startTime, endTime, createdBy)
