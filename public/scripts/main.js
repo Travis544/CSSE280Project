@@ -234,9 +234,25 @@ rhit.FbSessionsManager = class {
 		this._documentSnapshots = [];
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_SESSION);
 		this._unsubscribe = null;
-			rhit.fbUserManager.beginListening(rhit.fbAuthManager.uid, () => {
+		rhit.fbUserManager.beginListening(rhit.fbAuthManager.uid, () => {
 				
-			})
+		})
+	}
+
+	///this will only be called through the user join session function. 
+	updateJoinedUser(sessionID){
+		return this._ref.doc(sessionID).update({
+			//add into the array 
+
+			attendees: firebase.firestore.FieldValue.arrayUnion(rhit.fbAuthManager.uid)
+		})
+		.then(() => {
+		
+		})
+		.catch((error) => {
+			console.error(error);
+		});
+		
 	}
 
 	add(sessionName, courseId, description, location, isTaProfessorNeeded) {
@@ -276,21 +292,7 @@ rhit.FbSessionsManager = class {
 
 	}
 
-///this will only be called through the user join session function. 
-	updateJoinedUser(sessionID){
-			return this._ref.doc(sessionID).update({
-				//add into the array 
 
-				attendees: firebase.firestore.FieldValue.arrayUnion(rhit.fbAuthManager.uid)
-			})
-			.then(() => {
-			
-			})
-			.catch((error) => {
-				console.error(error);
-			});
-			
-		}
 
 	beginListening(changeListener) {
 
@@ -527,8 +529,9 @@ rhit.FbUserManager = class {
 						[rhit.FB_KEY_JOINEDSESSIONIDS]: [],
 						[rhit.FB_KEY_MAJOR]:"Update this",
 						[rhit.FB_KEY_ONGOINGCOURSEIDS]:[],
-						[rhit.FB_KEY_TAKENCOURSEIDS]:[]
-						[rhit.FB_KEY_YEAR]="Update this"
+						[rhit.FB_KEY_TAKENCOURSEIDS]:[],
+						[rhit.FB_KEY_PHONENUMBER]:"Update this",
+						[rhit.FB_KEY_YEAR]:"Update this"
 
 					}).then(() => {
 						return true;
@@ -662,6 +665,7 @@ rhit.FbUserManager = class {
 		}
 
 		get year() {
+		
 			return this._document.get(rhit.FB_KEY_YEAR);
 		}
 		get phoneNum() {
@@ -762,6 +766,7 @@ rhit.ProfilePageController = class {
 	updateView() {
 		// console.log('rhit.fbUserManager.name :>> ', rhit.fbUserManager.name);
 		// console.log('rhit.fbUserManager.photoUrl :>> ', rhit.fbUserManager.photoUrl);
+		document.querySelector("#username").innerHTML=rhit.fbUserManager.name
 		document.querySelector("#inputName").value = rhit.fbUserManager.name;
 		document.querySelector("#inputYear").value = rhit.fbUserManager.year;
 		document.querySelector("#inputMajor").value = rhit.fbUserManager.major;
