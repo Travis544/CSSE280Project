@@ -174,12 +174,18 @@ rhit.ListPageController = class {
 			</button>
 		</h5>
 		</div>
+		
 		<div id="collapse${index}" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
 		<div class="card-body">
 		<p class="card-text sessionCreatedBy">Created By: ${session.createdBy} </p>
+		<hr>
 		<p  class="card-text sessionDate" >${startDate=="TBA"?"TBA":startDate.getMonth()+1+"/"}${startDate=="TBA"?"":startDate.getDate()+"/"} ${startDate=="TBA"?"":startDate.getFullYear()}  
 			To ${startDate=="TBA"?"TBA":endDate.getMonth()+1+"/"}${startDate=="TBA"?"":endDate.getDate()+"/"}${startDate=="TBA"?"":endDate.getFullYear()}</p>
-			<p class="card-text sessionDecription">Description: ${session.description}</p>
+		<hr>
+		<p class="card-text sessionLocation">Description: ${session.location}</p>
+		<hr>
+		<p class="card-text sessionDecription">Location: ${session.description}</p>
+		<hr>
 		</div>
 		</div>
 		</div>
@@ -188,16 +194,35 @@ rhit.ListPageController = class {
 
 		let cardBody=elem.querySelector('.card-body');
 		if(session.isTaProfessorIn){
-			cardBody.appendChild(htmlToElement('<p class="card-text">TA or Professor is in</p>'))
+			cardBody.appendChild(htmlToElement('<p class="card-text">TA or Professor is in</p> <hr>'))
 		}else{
 			cardBody.appendChild(htmlToElement('<p class="card-text">TA and Professor both not joined</p>'))
 		}
-		const joinButton=htmlToElement('<button type="button" id="sessionJoinButton" class="btn b">Join</button>')
+		const joinButton=htmlToElement(' <button type="button" id="sessionJoinButton" class="btn sessioButton ">Join</button>')
+		const viewButton=htmlToElement('<button type="button" class="btn sessionButton" data-toggle="modal" data-target="#attendeesModal">View Attendees</button>')
+		
 		joinButton.onclick=()=>{
 			rhit.fbUserManager.joinSession(session.id)
 		}
-		cardBody.appendChild(joinButton)
 
+		viewButton.onclick=()=>{
+			let modalBody=document.querySelector("#attendeesModalBody")
+			modalBody.innerHTML=""
+			if(session.attendees){
+				for(let i=0; i<session.attendees.length; i++){
+					modalBody.append(htmlToElement(`<p>${session.attendees[i]}</p>`))
+				}
+				
+			}else{
+				modalBody.append("No attendees yet")
+			}
+			
+			
+		}
+
+
+		cardBody.appendChild(joinButton)
+		cardBody.appendChild(viewButton)
 	
 		return elem
 	}
@@ -614,10 +639,7 @@ rhit.FbUserManager = class {
 		}
 
 
-		joinSession(sessionID){
-
-
-		
+		joinSession(sessionID){		
 			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
 			return userRef.update({
 				joinedSessionIds: firebase.firestore.FieldValue.arrayUnion(sessionID)	
