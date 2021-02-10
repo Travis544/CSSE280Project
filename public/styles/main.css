@@ -116,6 +116,17 @@ body {
     color: white;
 }
 
+.attendeeText{
+    margin-right: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.accorButton{
+    width: 100%;
+}
+
 
 /* 
 Switch slider css */
@@ -132,7 +143,8 @@ Switch slider css */
     width: 0;
     height: 0;
   }
-  
+
+
   /* The slider */
   .slider {
     position: absolute;
@@ -145,6 +157,8 @@ Switch slider css */
     -webkit-transition: .4s;
     transition: .4s;
   }
+
+
   
   .slider:before {
     position: absolute;
