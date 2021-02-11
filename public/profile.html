@@ -36,8 +36,8 @@
       </ul>
     </div>
     <main class="bmd-layout-content">
-      <div id="profilePage" class="container page-container" style="width: 18rem;">
-        <div class="card">
+      <div id="profilePage" class="container page-container" >
+        <div class="card" id="#profileCard">
           <img id="profilePhoto" class="card-img-top" src="images/rose_logo.png" alt="Profile Photo">
           <input id="fileInput" type="file" hidden>
           <button id="submitPhoto" type="button" class="btn">Update profile photo</button>
@@ -60,14 +60,15 @@
               <input type="text" class="form-control" id="inputPhoneNumber">
             </div>
           </div>
-          
-        </div>
-        <div class="text-right">
           <button type="button" id="submitProfile" href="/Sessions.html" class="btn">Done</a>
+        </div>
+        
+        <div class="text-right">
+     
         </div>
         <div class="card" id="ongoingCourses">
           <h5 class="text-center">Onging Courses</h5>
-          <div class= "container page-container" style="width: 18rem;"> 
+          <div class= "container " style="width: 18rem;"> 
             <div id="ongoingCourseContainer"></div>
           </div>
           <div class="text-center">

@@ -194,3 +194,28 @@ Switch slider css */
     border-radius: 50%;
   }
 
+
+  #submitProfile{
+      margin: auto;
+      
+  }
+
+  @media screen and (min-width: 600px) {
+    #profilePhoto{
+        max-width: 300px;
+        height: 300px;
+        width: 100%;
+    }
+
+    #profileCard{
+     
+        flex-basis: 100%;
+        flex-grow: 1;
+        
+    }
+    #profilePage{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
+  }
