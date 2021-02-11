@@ -200,6 +200,10 @@ Switch slider css */
       
   }
 
+  .sessionText{
+      font-size:40px;
+  }
+
   @media screen and (min-width: 600px) {
     #profilePhoto{
         max-width: 300px;
@@ -218,4 +222,21 @@ Switch slider css */
         flex-direction: row;
         justify-content: center;
     }
+
+    .sessionJoinButton{
+
+    }
+    
+    .sessionTitle{
+        font-size: 22px;
+    }
+
+    .sessionBody p{
+        font-size: 15px;
+    }
+
+    .sessionBody button{
+        font-size: 18px;
+    }
+
   }

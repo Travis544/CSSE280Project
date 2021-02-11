@@ -166,26 +166,25 @@ rhit.ListPageController = class {
 		let elem= htmlToElement(` 
 		<div id="accordion">
 		<div class="card">
-		<div class="card-header" id="headingOne">
-		<h5 class="mb-0">
+		<div class="card-header" >
+		<h1 class="mb-0">
 			<button class="btn btn-link accorButton" data-toggle="collapse" data-target="#collapse${index}" aria-expanded="true" aria-controls="collapseOne">
-		
-			<div class="attendeeText"><div>${session.name}</div><div>Attendees: ${session.attendees?session.attendees.length:0}</div> </div>
+			<div class="attendeeText"><div class="sessionTitle">${session.name}</div> <div class="sessionTitle">Attendees: ${session.attendees?session.attendees.length:0}</div> </div>
 			</button>
-		</h5>
+		</h1>
 		</div>
 		
 		<div id="collapse${index}" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
-		<div class="card-body">
-		<p class="card-text sessionCreatedBy">Created By: ${session.createdBy} </p>
-		<hr>
-		<p  class="card-text sessionDate" >${startDate=="TBA"?"TBA":startDate.getMonth()+1+"/"}${startDate=="TBA"?"":startDate.getDate()+"/"} ${startDate=="TBA"?"":startDate.getFullYear()}  
-			To ${startDate=="TBA"?"TBA":endDate.getMonth()+1+"/"}${startDate=="TBA"?"":endDate.getDate()+"/"}${startDate=="TBA"?"":endDate.getFullYear()}</p>
-		<hr>
-		<p class="card-text sessionLocation">Description: ${session.location}</p>
-		<hr>
-		<p class="card-text sessionDecription">Location: ${session.description}</p>
-		<hr>
+		<div class="card-body sessionBody">
+			<p class="card-text sessionCreatedBy">Created By: ${session.createdBy} </p>
+			<hr>
+			<p  class="card-text sessionDate" >${startDate=="TBA"?"TBA":startDate.getMonth()+1+"/"}${startDate=="TBA"?"":startDate.getDate()+"/"} ${startDate=="TBA"?"":startDate.getFullYear()}  
+				To ${startDate=="TBA"?"TBA":endDate.getMonth()+1+"/"}${startDate=="TBA"?"":endDate.getDate()+"/"}${startDate=="TBA"?"":endDate.getFullYear()}</p>
+			<hr>
+			<p class="card-text sessionLocation">Description: ${session.location}</p>
+			<hr>
+			<p class="card-text sessionDecription">Location: ${session.description}</p>
+			<hr>
 		</div>
 		</div>
 		</div>
@@ -193,30 +192,33 @@ rhit.ListPageController = class {
 		`)
 
 		let cardBody=elem.querySelector('.card-body');
-		if(session.isTaProfessorIn){
+		if(session.isTaProfessorNeeded&&session.isTaProfessorIn){
 			cardBody.appendChild(htmlToElement('<p class="card-text">TA or Professor is in</p> <hr>'))
-		}else{
+		}else if(session.isTaProfessorNeeded&&!session.isTaProfessorIn){
 			cardBody.appendChild(htmlToElement('<p class="card-text">TA and Professor both not joined</p>'))
 		}
 
+		console.log(session.isTaProfessorNeeded)
+
+		
 		let joinButton=null
 		let deleteButton=null
 		let quitButton=null
 		if(!session.attendees.includes(rhit.fbAuthManager.uid)){
-			 joinButton=htmlToElement(' <button type="button"  class="btn sessionJoinButton sessionButton">Join</button>')
+			 joinButton=htmlToElement(' <button type="button"  class="btn btn-primary sessionJoinButton sessionButton">Join</button>')
 			 joinButton.onclick=()=>{
 				rhit.fbUserManager.joinSession(session.id)
 			}
 			cardBody.appendChild(joinButton)
 		}else if(session.createdBy==rhit.fbAuthManager.uid){
-			deleteButton=htmlToElement(' <button type="button"  class="btn sessionDeleteButton sessionButton ">Delete</button>')
+			deleteButton=htmlToElement(' <button type="button"  class="btn btn-danger sessionDeleteButton  sessionButton ">Delete</button>')
 			deleteButton.onclick=()=>{
 				rhit.fbSessionsManager.deleteSession(session.id)
 			}
 			cardBody.appendChild(deleteButton)
 
 		}else if(session.attendees.includes(rhit.fbAuthManager.uid)){
-			quitButton=htmlToElement(' <button type="button"  class="btn sessionQuitButton sessionButton  ">Quit</button>')
+			quitButton=htmlToElement(' <button type="button"  class="btn btn-warning sessionQuitButton  sessionButton  ">Quit</button>')
 			quitButton.onclick=()=>{
 				rhit.fbUserManager.quitSession(session.id)
 			}
@@ -229,20 +231,26 @@ rhit.ListPageController = class {
 		viewButton.onclick=()=>{
 			let modalBody=document.querySelector("#attendeesModalBody")
 			modalBody.innerHTML=""
-			if(session.attendees){
-				for(let i=0; i<session.attendees.length; i++){
-					modalBody.append(htmlToElement(`<p>${session.attendees[i]}</p>`))
-				}
-				
-			}else{
-				modalBody.append("No attendees yet")
-			}
+			modalBody=this.renderAttendeesProfile(modalBody,session)
 		}
-		
 		cardBody.appendChild(viewButton)
-	
 		return elem
 	}
+
+
+	renderAttendeesProfile(modalBody, session){
+		if(session.attendees){
+			for(let i=0; i<session.attendees.length; i++){
+				
+				modalBody.append(htmlToElement(`<p>${session.attendees[i]}</p>`))
+			}
+		}else{
+			modalBody.append("No attendees yet")
+		}
+		return modalBody
+	}
+
+
 }
 
 rhit.FbSessionsManager = class {
@@ -284,6 +292,7 @@ rhit.FbSessionsManager = class {
 				"displayName": rhit.fbUserManager.name,
 				[rhit.FB_KEY_CREATEDBY]:rhit.fbAuthManager.uid,
 				[rhit.FB_KEY_ISTAPROFESSORNEEDED]: 	isTaProfessorNeeded,
+				[rhit.FB_KEY_ISTAPROFESSORIN]: false,
 				[rhit.FB_KEY_ATTENDEES]:[]
 			})
 			.then( (docRef)=> {
@@ -385,6 +394,7 @@ rhit.FbSessionsManager = class {
 		}else{
 			endTime=""
 		}
+	
 
 		const createdBy=toRender[index].get('createdBy')
 		//attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime
@@ -394,14 +404,14 @@ rhit.FbSessionsManager = class {
 
 
 rhit.Session=class{
-	constructor(id, displayName, attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime, createdBy){
+	constructor(id, displayName, attendees, cID, description, isTaProfessorIn, isTaProfessorNeeded, location, name, startTime, endTime, createdBy){
 		this.id=id
 		this.displayName=displayName
 		this.attendees=attendees
 		this.courseID=cID
 		this.name=name
 		this.description=description
-		this.isTAProfessorIn=isTAProfessorIn
+		this.isTaProfessorIn=isTaProfessorIn
 		this.isTaProfessorNeeded=isTaProfessorNeeded
 		this.location=location
 		this.startTime=startTime
@@ -458,7 +468,7 @@ rhit.FbAuthManager=class{
 	}
 
 	signOut(){
-		console.log('cool')
+		
 			firebase.auth().signOut().catch((error) => {
 				// An error happened.
 				console.log("Error happened")
