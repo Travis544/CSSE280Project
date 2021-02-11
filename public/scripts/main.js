@@ -825,14 +825,14 @@ rhit.FbUserManager = class {
 	
 	rhit.TakenCoursesController = class {
 		constructor() {
-			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+			document.querySelector("#submitAddTakenCourse").addEventListener("click", (event) => {
 				//const courseID = document.querySelector("#inputOngoingCourseID").value;
 			});
 			$("#addTakenCourseDialog").on("show.bs.modal", (event) => {
 				document.querySelector("#inputTakenCourseID").value = "";
 			});
 			
-			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+			document.querySelector("#submitAddTakenCourse").addEventListener("click", (event) => {
 				const courseID = document.querySelector("#inputTakenCourseID").value;
 				let courses = rhit.fbUserManager.takenCourses;//ok
 				courses.push(courseID);
