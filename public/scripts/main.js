@@ -476,7 +476,8 @@ rhit.FbUserManager = class {
 			
 			this._collectoinRef = firebase.firestore().collection(rhit.FB_COLLECTION_USER);
 			this._document = null;
-			this.ongoingCourses=null
+			this.ongoingCourses=null;
+			this.takenCourses=null;
 		}
 		beginListening(uid, changeListener) {
 			console.log("Listening for uid", uid);
@@ -485,6 +486,7 @@ rhit.FbUserManager = class {
 				if (doc.exists) {
 					this._document = doc;
 					this.ongoingCourses=doc.get("ongoingCourseIds")
+					this.takenCourses=doc.get("takenCourseIds")
 					if (changeListener) {
 						changeListener();
 
@@ -493,6 +495,11 @@ rhit.FbUserManager = class {
 					if(rhit.ongoingCoursesController){
 					
 						rhit.ongoingCoursesController.updateList()
+					}
+
+					if(rhit.takenCoursesController){
+					
+						rhit.takenCoursesController.updateList()
 					}
 				} else {
 					console.log("User does not exist");
@@ -538,6 +545,19 @@ rhit.FbUserManager = class {
 					});
 				}
 			});
+		}
+
+		updateTakenCourses(courses){
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			return userRef.update({
+					[rhit.FB_KEY_TAKENCOURSEIDS]: courses
+				})
+				.then(() => {
+					console.log("Document successfully updated with name!");
+				})
+				.catch(function (error) {
+					console.error("Error updating document: ", error);
+				});
 		}
 	
 
@@ -689,9 +709,7 @@ rhit.FbUserManager = class {
 			$("#addOngoingCourseDialog").on("show.bs.modal", (event) => {
 				document.querySelector("#inputOngoingCourseID").value = "";
 			});
-			$("#addSessionDialog").on("shown.bs.modal", (event) => {
-				document.querySelector("#inputSessionName").focus();
-			});
+			
 			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
 				const courseID = document.querySelector("#inputOngoingCourseID").value;
 				let courses = rhit.fbUserManager.ongoingCourses;//ok
@@ -724,12 +742,62 @@ rhit.FbUserManager = class {
 			return htmlToElement(` <div class="card">
 			<div class="card-body">
 			<h5 class="card-title">${courseID}</h5>
+			<button type="button" id="dropButton${courseID}" class="btn b">Drop</button>
+			<button type="button" id="finishQuitButton${courseID}" class="btn b">Finish</button>
+			</div>
+		</div>`)
+		}
+	}
+
+	
+	rhit.TakenCoursesController = class {
+		constructor() {
+			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+				//const courseID = document.querySelector("#inputOngoingCourseID").value;
+			});
+			$("#addTakenCourseDialog").on("show.bs.modal", (event) => {
+				document.querySelector("#inputTakenCourseID").value = "";
+			});
+			
+			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
+				const courseID = document.querySelector("#inputTakenCourseID").value;
+				let courses = rhit.fbUserManager.takenCourses;//ok
+				courses.push(courseID);
+				console.log("courses", courses);//can print
+				rhit.fbUserManager.updateTakenCourses(courses).then(() => {
+					//window.location.href = "/profile.html"
+				});
+			});
+			
+		}
+
+		updateList(){
+			console.log("UPDATED")
+			let newContainer=htmlToElement('<div id="takenCourseContainer"></div>')
+			let oldContainer=document.querySelector("#takenCourseContainer")
+			let courses = rhit.fbUserManager.takenCourses;//error: get null property
+			for(let i=0; i<rhit.fbUserManager.takenCourses.length; i++){
+				console.log(rhit.fbUserManager.takenCourses[i]);
+				let courseCard=this._createCourseCard(rhit.fbUserManager.takenCourses[i])
+				newContainer.appendChild(courseCard)
+			}
+			oldContainer.hidden=true;
+			oldContainer.removeAttribute('id')
+			oldContainer.parentElement.appendChild(newContainer)
+			
+		}
+
+		_createCourseCard(courseID){
+			return htmlToElement(` <div class="card">
+			<div class="card-body">
+			<h5 class="card-title">${courseID}</h5>
 			<button type="button" id="dropButton" class="btn b">Drop</button>
 			<button type="button" id="finishQuitButton" class="btn b">Finish</button>
 			</div>
 		</div>`)
 		}
 	}
+
 
 
 rhit.ProfilePageController = class {
@@ -799,11 +867,8 @@ rhit.initializePage = function(){
 		new rhit.SideNavController();
 		new rhit.ProfilePageController();
 		rhit.ongoingCoursesController=new rhit.OngoingCoursesController();
+		rhit.takenCoursesController=new rhit.TakenCoursesController();
 	}
-
-	
-
-
 }
 
 rhit.createUserObjectIfNeeded=function(){
