@@ -112,6 +112,7 @@ body {
 }
 
 #submitProfile {
+    margin-top: 0;
     background-color: #800000;
     color: white;
 }
@@ -204,28 +205,64 @@ Switch slider css */
       font-size:40px;
   }
 
-  @media screen and (min-width: 600px) {
+
+    #profileCard{
+        flex-basis: 30%;
+    }
+
+  #takenCourses{
+   
+    flex-basis: 30%;
+  }
+
+  
+  #ongoingCourses{
+   
+    flex-basis: 30%;
+  }
+ 
+ 
+  #ongoingCourseContainer,#takenCourseContainer {
+      padding:7px;
+  }
+
+  .courseIDText{
+      font-size: 13px;
+  }
+
+  .profileSlice .card-body{
+      padding:10px;
+  }
+
+
+
+  @media screen and (min-width: 700px) {
     #profilePhoto{
-        max-width: 300px;
+        
         height: 300px;
         width: 100%;
     }
 
-    #profileCard{
-     
-        flex-basis: 100%;
-        flex-grow: 1;
-        
-    }
+  
+
     #profilePage{
         display: flex;
         flex-direction: row;
         justify-content: center;
+        overflow-y:auto;
+        margin-top: 50px;   
     }
 
-    .sessionJoinButton{
+    #ongoingCourseContainer,#takenCourseContainer {
+        overflow-y:auto;
+        height: 100%;
+        max-height: 720px;
+        padding: 5px;
+     }
 
-    }
+    
+
+    
     
     .sessionTitle{
         font-size: 22px;
@@ -239,4 +276,33 @@ Switch slider css */
         font-size: 18px;
     }
 
+
+  }
+
+
+  @media (max-width:750px) and (min-width:500px) {
+    #profilePhoto{
+        height: 500px;
+        width: 100%;
+
+    }
+
+    #profilePage{
+        max-width: 100%;
+    }
+
+    #profileCard{
+        flex-basis: 30%;
+    }
+
+  #takenCourses{
+   
+    flex-basis: 30%;
+  }
+
+  
+  #ongoingCourses{
+   
+    flex-basis: 30%;
+  }
   }

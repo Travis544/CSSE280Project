@@ -36,12 +36,12 @@
       </ul>
     </div>
     <main class="bmd-layout-content">
-      <div id="profilePage" class="container page-container" >
-        <div class="card" id="#profileCard">
+      <div id="profilePage" class=" container page-container" >
+        <div class=" card" id="profileCard">
           <img id="profilePhoto" class="card-img-top" src="images/rose_logo.png" alt="Profile Photo">
           <input id="fileInput" type="file" hidden>
           <button id="submitPhoto" type="button" class="btn">Update profile photo</button>
-          <div class="card-body">
+          <div class="card-body profileSlice">
             <div id="username">Username </div>
             <div class="form-group bmd-form-group">
               <label for="inputName">Name</label>
@@ -59,6 +59,10 @@
               <label for="inputPhoneNumber">Phone Numer</label>
               <input type="text" class="form-control" id="inputPhoneNumber">
             </div>
+            <div class="form-group bmd-form-group">
+              <label for="inputIdentity">Identity</label>
+              <input type="text" class="form-control" id="inputIdentity">
+            </div>
           </div>
           <button type="button" id="submitProfile" href="/Sessions.html" class="btn">Done</a>
         </div>
@@ -66,10 +70,11 @@
         <div class="text-right">
      
         </div>
+        
         <div class="card" id="ongoingCourses">
           <h5 class="text-center">Onging Courses</h5>
-          <div class= "container " style="width: 18rem;"> 
-            <div id="ongoingCourseContainer"></div>
+          <div class= "container" > 
+            <div id="ongoingCourseContainer" class="card-body listCourse"></div>
           </div>
           <div class="text-center">
             <button type="button" id="ongoingCourseAddBtn" class="btn b" 
@@ -78,8 +83,8 @@
         </div>
         <div class="card" id="takenCourses">
           <h5 class="text-center">Taken Courses</h5>
-          <div class= "container " style="width: 18rem;"> 
-            <div id="takenCourseContainer"></div>
+          <div class= "container" > 
+            <div id="takenCourseContainer" class="listCourse"></div>
           </div>
           <div class="text-center">
             <button type="button" id="takenCourseAddBtn" class="btn b" 
@@ -104,6 +109,14 @@
             <input type="text" class="form-control" id="inputOngoingCourseID">
             <span class="bmd-help"></span>
           </div>
+          <div class="form-group">
+            <div class="form-check check">
+              <input class="form-check-input" type="checkbox" id="isProf">
+              <label class="form-check-label" for="isProf">
+                Are you a professor for this class?
+              </label>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
@@ -126,7 +139,15 @@
             <label for="inputTakenCourseID" class="bmd-label-floating">Course ID</label>
             <input type="text" class="form-control" id="inputTakenCourseID">
             <span class="bmd-help"></span>
-          </div>
+            <div class="form-group">
+              <div class="form-check check">
+                <input class="form-check-input" type="checkbox" id="isTa">
+                <label class="form-check-label" for="isTa">
+                  Are you a TA for this class?
+                </label>
+              </div>
+            </div>
+         
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
