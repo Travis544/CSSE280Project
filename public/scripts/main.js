@@ -281,7 +281,8 @@ rhit.FbSessionsManager = class {
 				[rhit.FB_KEY_CREATEDBY]:rhit.fbAuthManager.uid,
 				[rhit.FB_KEY_ISTAPROFESSORNEEDED]: 	isTaProfessorNeeded,
 				[rhit.FB_KEY_ISTAPROFESSORIN]: false,
-				[rhit.FB_KEY_ATTENDEES]:[]
+				[rhit.FB_KEY_ATTENDEES]:[],
+				"taAndProfessors":[]
 			})
 			.then( (docRef)=> {
 				console.log("Document written with ID: ", docRef.id);
@@ -318,7 +319,34 @@ rhit.FbSessionsManager = class {
 			attendees: firebase.firestore.FieldValue.arrayRemove(rhit.fbAuthManager.uid)
 		}).then(()=>{
 			console.log("removed user succcessfully")
+			let courseID=this.getSessionCourseID(sessionID)
+			if(rhit.fbUserManager.checkIfTaOrProfessor(courseID)){
+				this.removeSessionTaAndProfessor(sessionID).then(()=>{
+					this.taOrProfessorRemoved(sessionID)
+				})
+			
+			}
 		})
+	}
+
+	taOrProfessorRemoved(sessionID){
+		this._ref.doc(sessionID).get().then((doc) => {
+			if (doc.exists) {
+				return doc;
+			} else {
+				console.log("No such document!");
+			}
+		}).then((doc)=>{
+			if(doc.get("taAndProfessors").length==0){
+				this._ref.doc(sessionID).update({
+					isTaProfessorIn: false
+				}).then(()=>{
+					
+				})
+			}
+		}).catch((error) => {
+			console.log("Error getting document:", error);
+		});
 	}
 
 	taOrProfessorJoined(sessionID){
@@ -327,18 +355,40 @@ rhit.FbSessionsManager = class {
 			isTaProfessorIn: true
 		}).then(()=>{
 			console.log("ta or professor joined")
-		}).catch(err=>{
+		}).then(()=>{
+			this.updateSessionTaAndProfessor(sessionID);
+		})
+		
+		.catch(err=>{
 			console.log(err)
 		})
 	}
 
 
 
+	updateSessionTaAndProfessor(sessionID){
+		this._ref.doc(sessionID).update({
+			taAndProfessors: firebase.firestore.FieldValue.arrayUnion(rhit.fbAuthManager.uid)
+		}).catch(err=>{
+			console.log(err)
+		})
+	}
+
+	removeSessionTaAndProfessor(sessionID){
+		return this._ref.doc(sessionID).update({
+			taAndProfessors: firebase.firestore.FieldValue.arrayRemove(rhit.fbAuthManager.uid)
+		}).then(()=>{
+			console.log("removed user succcessfully")
+		})
+	}
+
+
 	beginListening(changeListener) {
 
 		let query = this._ref
+		
 		//.orderBy('startTime', "desc")
-		let queryForJoinSession=this._ref
+		
 		if (this._uid) {
 			query = query.where( "attendees", "array-contains", this._uid);
 			console.log("DID THIS")
@@ -348,13 +398,17 @@ rhit.FbSessionsManager = class {
 		this._unsubscribe = query.onSnapshot((querySnapshot) => {
 
 			this._documentSnapshots = querySnapshot.docs;
-		//	console.log(querySnapshot.docs)
+			//console.log(JSON.stringify(this._documentSnapshots))
+			//	console.log(querySnapshot.docs)
 		//	console.log("Change listener!")
+		
 			changeListener();
 		});
 
 	
 	}
+
+	
 
 	stopListening() {
 		this._unsubscribe();
@@ -362,6 +416,14 @@ rhit.FbSessionsManager = class {
 
 	get length() {
 		return this._documentSnapshots.length
+	}
+
+	 getSessionCourseID(sessionID){
+		for(let i=0; i<this._documentSnapshots.length;i++){
+			if(this._documentSnapshots[i].id==sessionID){
+				return this._documentSnapshots[i].get(rhit.FB_KEY_COURSEID)
+			}
+		}
 	}
 
 	getSessionAtIndex(index){
@@ -629,6 +691,43 @@ rhit.FbUserManager = class {
 
 		}
 
+			/*this function handles the case when a user joined a session
+			and went to the profile page to add or update a session for themselves to be a ta in .
+		*/
+		updateUserSessionsTaProfStatus(courseID){
+			let sessionsJoined=this._document.get(rhit.FB_KEY_JOINEDSESSIONIDS)
+			let ref = firebase.firestore().collection(rhit.FB_COLLECTION_SESSION);
+			for(let session of sessionsJoined){
+				
+				this.taProfStatusHelper(ref, session).then((doc)=>{
+					console.log(doc.get("courseId"))
+					if(doc.get("courseId").toLowerCase().trim()==courseID.toLowerCase().trim()){
+						this.updateTaProfStatusHelper(ref, session)
+					}
+				})
+			}
+		
+		}
+
+		 taProfStatusHelper(ref, session){
+			return ref.doc(session).get().then((doc) => {
+				if (doc.exists) {
+					return doc;
+				} else {
+					console.log("No such document!");
+				}
+			}).catch((error) => {
+				console.log("Error getting document:", error);
+			});
+		}
+
+
+		async updateTaProfStatusHelper(ref, session){
+			await ref.doc(session).update({
+				isTaProfessorIn: true
+			})
+		}
+
 		//if the user marks that they are a ta or prof for a particular course, save that.
 		updateCoursesIsTaOrProfFor(courseID){
 			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
@@ -637,12 +736,19 @@ rhit.FbUserManager = class {
 				})
 				.then(() => {
 					//console.log("Document successfully updated!");
+					this.updateUserSessionsTaProfStatus(courseID)
 				})
 				.catch(function (error) {
 					console.error("Error updating document: ", error);
 				});
 		}
 
+
+	
+
+		
+
+	
 		updateTakenCourses(courses){
 			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
 			return userRef.update({
@@ -666,6 +772,7 @@ rhit.FbUserManager = class {
 				})
 				.then(() => {
 					console.log("Document successfully updated with name!");
+					
 				})
 				.catch(function (error) {
 					console.error("Error updating document: ", error);
@@ -785,11 +892,7 @@ rhit.FbUserManager = class {
 			.then(() => {
 				rhit.fbSessionsManager.updateJoinedUser(sessionID)
 			}).then(()=>{
-				let isIn=this.checkIfTaOrProfessor(courseID);
-				console.log(isIn)
-				if(isIn){
-					rhit.fbSessionsManager.taOrProfessorJoined(sessionID)
-				}
+				this.didTaOrProfJoin(sessionID, courseID)
 			})
 			.catch(function (error) {
 				console.error("Error updating document: ", error);
@@ -805,6 +908,38 @@ rhit.FbUserManager = class {
 			})
 		}
 
+
+
+
+
+
+
+		removeTaOrProfCourse(courseID){
+			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
+			
+			userRef.update({
+				[rhit.FB_KEY_COURSE_ISTA_OR_PROF_FOR]: firebase.firestore.FieldValue.arrayRemove(courseID)
+			}).then(()=>{
+				console.log("removed user succcessfully")
+			})
+		}
+
+
+		didTaOrProfJoin(sessionID,courseID){
+			return new Promise((resolve, reject)=>{
+				let isIn=false;
+				 isIn=this.checkIfTaOrProfessor(courseID);
+				console.log(isIn)
+				if(isIn){
+					rhit.fbSessionsManager.taOrProfessorJoined(sessionID).then(()=>{
+						resolve()
+					})
+				}else{
+					resolve()
+				}
+			})
+			
+		}
 		
 		checkIfTaOrProfessor(courseID){
 			let identity=this._document.get(rhit.FB_KEY_IDENTITY)
@@ -814,10 +949,10 @@ rhit.FbUserManager = class {
 					let courses=this.coursesTaOrProfFor
 					for(let course of courses){
 						if(course.toLowerCase().trim()==courseID.toLowerCase().trim()){
-							return true;
+							return true;	
 						}
-					}
-					
+						console.log(courses+" "+courseID)
+					}		
 			}
 
 			return false
@@ -913,7 +1048,7 @@ rhit.FbUserManager = class {
 			oldContainer.hidden=true;
 			oldContainer.removeAttribute('id')
 			oldContainer.parentElement.appendChild(newContainer)
-			if(this.uid!=rhit.fbAuthManager.uid){
+			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
 				document.querySelector("#ongoingCourseAddBtn").hidden=true;
 			}else{
 				document.querySelector("#ongoingCourseAddBtn").hidden=false;
@@ -924,7 +1059,7 @@ rhit.FbUserManager = class {
 		_createCourseCard(courseID, isTaOrProf){
 
 		
-			if(rhit.fbAuthManager.uid!=this.uid){
+			if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
 				return htmlToElement(` <div class="card ongoingCourseCard">
 				<div class="card-body">
 				<h5 class="card-title">${courseID}</h5>
@@ -992,7 +1127,8 @@ rhit.FbUserManager = class {
 			oldContainer.hidden=true;
 			oldContainer.removeAttribute('id')
 			oldContainer.parentElement.appendChild(newContainer)
-			if(this.uid!=rhit.fbAuthManager.uid){
+			console.log(this.uid)
+			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
 				document.querySelector("#takenCourseAddBtn").hidden=true;
 			}else{
 				document.querySelector("#takenCourseAddBtn").hidden=false;
@@ -1003,7 +1139,7 @@ rhit.FbUserManager = class {
 		_createCourseCard(courseID, isTaOrProf){
 
 			
-			if(rhit.fbAuthManager.uid!=this.uid){
+			if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
 					return htmlToElement(` <div class="card">
 				<div class="card-body">
 				<h5 class="card-title">${courseID}</h5>
