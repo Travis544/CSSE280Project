@@ -59,6 +59,7 @@ rhit.ClassName = class {
 	}
 }
 
+
 rhit.SideNavController = class {
 	constructor() {
 		const profileItem = document.querySelector("#menuGoToProfilePage");
@@ -743,12 +744,6 @@ rhit.FbUserManager = class {
 				});
 		}
 
-
-	
-
-		
-
-	
 		updateTakenCourses(courses){
 			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
 			return userRef.update({
@@ -761,9 +756,6 @@ rhit.FbUserManager = class {
 					console.error("Error updating document: ", error);
 				});
 		}
-
-		
-	
 
 		updateOngoingCourses(courses){
 			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
@@ -908,12 +900,6 @@ rhit.FbUserManager = class {
 			})
 		}
 
-
-
-
-
-
-
 		removeTaOrProfCourse(courseID){
 			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
 			
@@ -1005,7 +991,6 @@ rhit.FbUserManager = class {
 		constructor(uid) {
 			this.uid=uid
 			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
-				//const courseID = document.querySelector("#inputOngoingCourseID").value;
 			});
 			$("#addOngoingCourseDialog").on("show.bs.modal", (event) => {
 				document.querySelector("#inputOngoingCourseID").value = "";
@@ -1013,18 +998,17 @@ rhit.FbUserManager = class {
 			
 			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
 				const courseID = document.querySelector("#inputOngoingCourseID").value;
-				let courses = rhit.fbUserManager.ongoingCourses;//ok
+				let courses = rhit.fbUserManager.ongoingCourses;
 				courses.push(courseID);
-				//console.log("courses", courses);//can print
 				let checked=document.querySelector("#isProf").checked
 				if(checked){
 					rhit.fbUserManager.updateCoursesIsTaOrProfFor(courseID)
 				}
 				rhit.fbUserManager.updateOngoingCourses(courses).then(() => {
-					//window.location.href = "/profile.html"
+					this.updateList();
 				});
 			});
-			
+			// this.updateList();
 		}
 
 		updateList(){
@@ -1032,63 +1016,63 @@ rhit.FbUserManager = class {
 			let newContainer=htmlToElement('<div id="ongoingCourseContainer"></div>')
 			let oldContainer=document.querySelector("#ongoingCourseContainer")
 			let courses = rhit.fbUserManager.ongoingCourses;
-			let coursesTaOrProfFor=rhit.fbUserManager.coursesTaOrProfFor
+			let coursesTaOrProfFor=rhit.fbUserManager.coursesTaOrProfFor;
+			console.log(courses);
 			for(let i=0; i<rhit.fbUserManager.ongoingCourses.length; i++){
-				//console.log(rhit.fbUserManager.ongoingCourses[i]);
 				let isTaOrProf=false
 				if( coursesTaOrProfFor){
 					isTaOrProf=coursesTaOrProfFor.includes(rhit.fbUserManager.takenCourses[i])
 				}
 				let courseCard=this._createCourseCard(rhit.fbUserManager.ongoingCourses[i], isTaOrProf)
-				newContainer.appendChild(courseCard)
-				console.log("#dropButton" + rhit.fbUserManager.ongoingCourses[i]);
-				
+				newContainer.appendChild(courseCard)	
+				console.log("cards created");			
 			}
 			oldContainer.hidden=true;
 			oldContainer.removeAttribute('id')
 			oldContainer.parentElement.appendChild(newContainer)
 			for(let i = 0; i < rhit.fbUserManager.ongoingCourses.length; i++) {
 				document.querySelector("#dropButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
-					courses.splice(i,1);
+					courses = courses.splice(i,1);
 					rhit.fbUserManager.updateOngoingCourses(courses);
+					window.location.reload();
 				});
-				document.querySelector("#finishQuitButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
-					rhit.fbUserManager.ongoingCourses.splice(i,1);
+				
+				document.querySelector("#finishButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
+					courses.splice(i,1);
 					let takenCourses = rhit.fbUserManager.takenCourses;
 					takenCourses.push(rhit.fbUserManager.ongoingCourses[i]);
 					rhit.fbUserManager.updateOngoingCourses(courses);
 					rhit.fbUserManager.updateTakenCourses(takenCourses);
+					window.location.reload();
 				});
+				console.log("#finishButton" + rhit.fbUserManager.ongoingCourses[i]);
 			}
 			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
 				document.querySelector("#ongoingCourseAddBtn").hidden=true;
 			}else{
 				document.querySelector("#ongoingCourseAddBtn").hidden=false;
 			}
+			console.log(courses);
 		}
 
 		_createCourseCard(courseID, isTaOrProf){
 			if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
 				return htmlToElement(` <div class="card ongoingCourseCard">
-				<div class="card-body">
+				<div class="card-body" id="ongoingCard${courseID}>
 				<h5 class="card-title">${courseID}</h5>
 				<p>${isTaOrProf?"Professor for this class":""} </p>
 				</div>`)
 				
 			}else{
 				return htmlToElement(` <div class="card ongoingCourseCard">
-				<div class="card-body">
+				<div class="card-body" id="ongoingCard${courseID}>
 				<h5 class="card-title">${courseID}</h5>
 				<p>${isTaOrProf?"Professor for this class":""} </p>
 				<button type="button" id="dropButton${courseID}" class="btn b">Drop</button>
-				<button type="button" id="finishQuitButton${courseID}" class="btn b">Finish</button>
+				<button type="button" id="finishButton${courseID}" class="btn b" >Finish</button>
 				</div>
 				</div>`)
 			}	
-		}
-
-		updateView() {
-			
 		}
 	}
 
@@ -1139,13 +1123,21 @@ rhit.FbUserManager = class {
 			oldContainer.hidden=true;
 			oldContainer.removeAttribute('id')
 			oldContainer.parentElement.appendChild(newContainer)
+			for(let i = 0; i < rhit.fbUserManager.takenCourses.length; i++) {
+				console.log("#delete" + rhit.fbUserManager.takenCourses[i]);
+				document.querySelector("#delete" + rhit.fbUserManager.takenCourses[i]).addEventListener("click", (event) => {
+					courses.splice(i,1);
+					rhit.fbUserManager.updateTakenCourses(courses);
+					//window.location.reload();
+					this.updateList();
+				});
+			}
 			console.log(this.uid)
 			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
 				document.querySelector("#takenCourseAddBtn").hidden=true;
 			}else{
 				document.querySelector("#takenCourseAddBtn").hidden=false;
 			}
-			
 		}
 
 		_createCourseCard(courseID, isTaOrProf){
@@ -1163,10 +1155,9 @@ rhit.FbUserManager = class {
 			<div class="card-body">
 			<h5 class="card-title">${courseID}</h5>
 			<p>${isTaOrProf?"Ta for this class":""} </p>
-			<button type="button" id="dropButton" class="btn b">Drop</button>
-			<button type="button" id="finishQuitButton" class="btn b">Finish</button>
+			<button type="button" id="delete${courseID}" class="btn b" >Drop</button>
 			</div>
-		</div>`)
+			</div>`)
 			}
 			
 		}
@@ -1208,7 +1199,6 @@ rhit.ProfilePageController = class {
 		});
 
 		console.log(uid)
-										//if uid exist, use that for a specific user, else use the current user
 		rhit.fbUserManager.beginListening(uid?uid:rhit.fbAuthManager.uid, this.updateView.bind(this));
 	}
 
