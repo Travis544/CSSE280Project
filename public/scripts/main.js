@@ -1008,7 +1008,6 @@ rhit.FbUserManager = class {
 					this.updateList();
 				});
 			});
-			// this.updateList();
 		}
 
 		updateList(){
@@ -1024,6 +1023,7 @@ rhit.FbUserManager = class {
 					isTaOrProf=coursesTaOrProfFor.includes(rhit.fbUserManager.takenCourses[i])
 				}
 				let courseCard=this._createCourseCard(rhit.fbUserManager.ongoingCourses[i], isTaOrProf)
+				
 				newContainer.appendChild(courseCard)	
 				console.log("cards created");			
 			}
@@ -1034,16 +1034,15 @@ rhit.FbUserManager = class {
 				document.querySelector("#dropButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
 					courses = courses.splice(i,1);
 					rhit.fbUserManager.updateOngoingCourses(courses);
-					window.location.reload();
 				});
 				
 				document.querySelector("#finishButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
+					let finishedID = rhit.fbUserManager.ongoingCourses[i];
 					courses.splice(i,1);
 					let takenCourses = rhit.fbUserManager.takenCourses;
-					takenCourses.push(rhit.fbUserManager.ongoingCourses[i]);
+					takenCourses.push(finishedID);
 					rhit.fbUserManager.updateOngoingCourses(courses);
 					rhit.fbUserManager.updateTakenCourses(takenCourses);
-					window.location.reload();
 				});
 				console.log("#finishButton" + rhit.fbUserManager.ongoingCourses[i]);
 			}
@@ -1052,7 +1051,6 @@ rhit.FbUserManager = class {
 			}else{
 				document.querySelector("#ongoingCourseAddBtn").hidden=false;
 			}
-			console.log(courses);
 		}
 
 		_createCourseCard(courseID, isTaOrProf){
@@ -1155,7 +1153,7 @@ rhit.FbUserManager = class {
 			<div class="card-body">
 			<h5 class="card-title">${courseID}</h5>
 			<p>${isTaOrProf?"Ta for this class":""} </p>
-			<button type="button" id="delete${courseID}" class="btn b" >Drop</button>
+			<button type="button" id="delete${courseID}" class="btn b" >DELETE</button>
 			</div>
 			</div>`)
 			}
