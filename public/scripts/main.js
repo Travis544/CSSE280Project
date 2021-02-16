@@ -1027,13 +1027,16 @@ rhit.FbUserManager = class {
 				newContainer.appendChild(courseCard)	
 				console.log("cards created");			
 			}
-			oldContainer.hidden=true;
+
+			oldContainer.innerHTML = ``;
 			oldContainer.removeAttribute('id')
 			oldContainer.parentElement.appendChild(newContainer)
+
 			for(let i = 0; i < rhit.fbUserManager.ongoingCourses.length; i++) {
 				document.querySelector("#dropButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
-					courses = courses.splice(i,1);
+					courses.splice(i,1);
 					rhit.fbUserManager.updateOngoingCourses(courses);
+					this.updateList();
 				});
 				
 				document.querySelector("#finishButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
@@ -1043,8 +1046,9 @@ rhit.FbUserManager = class {
 					takenCourses.push(finishedID);
 					rhit.fbUserManager.updateOngoingCourses(courses);
 					rhit.fbUserManager.updateTakenCourses(takenCourses);
+					this.updateList();
+					TakenCoursesController.updateList()
 				});
-				console.log("#finishButton" + rhit.fbUserManager.ongoingCourses[i]);
 			}
 			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
 				document.querySelector("#ongoingCourseAddBtn").hidden=true;
@@ -1118,15 +1122,14 @@ rhit.FbUserManager = class {
 				let courseCard=this._createCourseCard(rhit.fbUserManager.takenCourses[i], isTaOrProf)
 				newContainer.appendChild(courseCard)
 			}
-			oldContainer.hidden=true;
+			// oldContainer.hidden=true;
+			oldContainer.innerHTML = ``;
 			oldContainer.removeAttribute('id')
 			oldContainer.parentElement.appendChild(newContainer)
 			for(let i = 0; i < rhit.fbUserManager.takenCourses.length; i++) {
-				console.log("#delete" + rhit.fbUserManager.takenCourses[i]);
 				document.querySelector("#delete" + rhit.fbUserManager.takenCourses[i]).addEventListener("click", (event) => {
 					courses.splice(i,1);
 					rhit.fbUserManager.updateTakenCourses(courses);
-					//window.location.reload();
 					this.updateList();
 				});
 			}
