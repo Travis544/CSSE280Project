@@ -7,6 +7,7 @@
 /** namespace. */
 var rhit = rhit || {};
 
+
 rhit.FB_COLLECTION_USER = "User";
 rhit.FB_KEY_IDENTITY = "identity";
 rhit.FB_KEY_JOINEDSESSIONIDS = "joinedSessionIds";
@@ -26,6 +27,7 @@ rhit.FB_KEY_ISTAPROFESSORIN = "isTaProfessorIn";
 rhit.FB_KEY_ISTAPROFESSORNEEDED = "isTaProfessorNeeded";
 rhit.FB_KEY_LOCATION = "location";
 rhit.FB_KEY_SESSION_NAME = "name";
+rhit.FB_KEY_DATE = "date";
 rhit.FB_KEY_ENDTIME = "endTime";
 rhit.FB_KEY_STARTTIME = "startTime";
 rhit.FB_KEY_CREATEDBY = "createdBy";
@@ -102,7 +104,16 @@ rhit.ListPageController = class {
 			const description = document.querySelector("#inputDescription").value;
 			const location = document.querySelector("#inputLocation").value;
 			const isTaProfessorNeeded=document.querySelector("#taProfCheckBox").checked
-			rhit.fbSessionsManager.add(sessionName, courseId, description, location, isTaProfessorNeeded);
+			const date = document.querySelector("#date").value
+			const startTime = document.querySelector("#startTime").value
+			const endTime = document.querySelector("#endTime").value
+			if(Date.parse(date + " " + endTime) <= Date.parse(firebase.firestore.Timestamp)
+			|| Date.parse(date + " " + endTime) <= Date.parse(date + " " + startTime)) {
+				alert("Invalid Time Input Detected: Please check time input")
+			} else {			
+				rhit.fbSessionsManager.add(sessionName, courseId, description, location, isTaProfessorNeeded, date, startTime, endTime);
+			}
+
 			
 		});
 
@@ -135,9 +146,14 @@ rhit.ListPageController = class {
 	
 		console.log(rhit.fbSessionsManager.length)
 		for(let i=0; i<rhit.fbSessionsManager.length; i++){
-		
+			const date = rhit.fbSessionsManager.getSessionAtIndex(i).date;
+			const endTime = rhit.fbSessionsManager.getSessionAtIndex(i).endTime;
+			if(Date.parse(date+" "+endTime) < Date.parse(firebase.firestore.Timestamp.now().toDate())) {
+
+			} else {
 			let sessionCard=this._createSessionCard(rhit.fbSessionsManager.getSessionAtIndex(i), i)
 			newContainer.appendChild(sessionCard)
+			}
 		}
 		oldContainer.hidden=true;
 		oldContainer.innerHTML=""
@@ -145,16 +161,7 @@ rhit.ListPageController = class {
 		oldContainer.parentElement.appendChild(newContainer)
 		
 	}
-	_createSessionCard(session, index){
-		
-		let startDate=new Date(session.startTime)
-		let  endDate=new Date(session.endTime)
-		if(session.startTime==""){
-			startDate="TBA"
-			endDate="TBA"
-		}
-
-		
+	_createSessionCard(session, index){	
 		let elem= htmlToElement(` 
 		<div id="accordion">
 		<div class="card">
@@ -171,8 +178,7 @@ rhit.ListPageController = class {
 		<div class="card-body sessionBody">
 			<p class="card-text sessionCreatedBy">Created By: ${session.createdBy} </p>
 			<hr>
-			<p  class="card-text sessionDate" >${startDate=="TBA"?"TBA":startDate.getMonth()+1+"/"}${startDate=="TBA"?"":startDate.getDate()+"/"} ${startDate=="TBA"?"":startDate.getFullYear()}  
-				To ${startDate=="TBA"?"TBA":endDate.getMonth()+1+"/"}${startDate=="TBA"?"":endDate.getDate()+"/"}${startDate=="TBA"?"":endDate.getFullYear()}</p>
+			<p  class="card-text sessionDate" >ON ${session.date} From ${session.startTime} to ${session.endTime}</p>
 			<hr>
 			<p class="card-text sessionLocation">Description: ${session.location}</p>
 			<hr>
@@ -270,7 +276,7 @@ rhit.FbSessionsManager = class {
 		
 	}
 
-	add(sessionName, courseId, description, location, isTaProfessorNeeded) {
+	add(sessionName, courseId, description, location, isTaProfessorNeeded, date, startTime, endTime) {
 		// Add a new document with a generated id.
 	
 		this._ref.add({
@@ -283,7 +289,10 @@ rhit.FbSessionsManager = class {
 				[rhit.FB_KEY_ISTAPROFESSORNEEDED]: 	isTaProfessorNeeded,
 				[rhit.FB_KEY_ISTAPROFESSORIN]: false,
 				[rhit.FB_KEY_ATTENDEES]:[],
-				"taAndProfessors":[]
+				"taAndProfessors":[],
+				[rhit.FB_KEY_DATE]: date,
+				[rhit.FB_KEY_STARTTIME]: startTime,
+				[rhit.FB_KEY_ENDTIME]: endTime
 			})
 			.then( (docRef)=> {
 				console.log("Document written with ID: ", docRef.id);
@@ -441,30 +450,27 @@ rhit.FbSessionsManager = class {
 		const location=toRender[index].get(rhit.FB_KEY_LOCATION)
 		const name=toRender[index].get(rhit.FB_KEY_NAME)
 		const displayName=toRender[index].get("displayName")
+		const date = toRender[index].get(rhit.FB_KEY_DATE);
 
 		let startTime=toRender[index].get(rhit.FB_KEY_STARTTIME)
 		let endTime=toRender[index].get(rhit.FB_KEY_ENDTIME)
-		if(startTime){
-			startTime=startTime.toDate()
-		}else{
-			startTime=""
-		}
-		if(endTime){
-			endTime=endTime.toDate()
-		}else{
-			endTime=""
-		}
 	
 
 		const createdBy=toRender[index].get('createdBy')
+		// console.log(firebase.firestore.Timestamp.now().toDate());
+		// console.log(Date.parse(firebase.firestore.Timestamp.now().toDate()));
+		// console.log(date+"-"+endTime);
+		// console.log(endTime);
+		// console.log(Date.parse(date+" "+endTime));
+		
 		//attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime
-		return new rhit.Session(id, displayName, attendees,courseID, descrip, isTaProfessorIn, isTaProfessorNeeded,location, name, startTime, endTime, createdBy)
+		return new rhit.Session(id, displayName, attendees,courseID, descrip, isTaProfessorIn, isTaProfessorNeeded,location, name, createdBy, date, startTime, endTime)
 	  }
 }
 
 
 rhit.Session=class{
-	constructor(id, displayName, attendees, cID, description, isTaProfessorIn, isTaProfessorNeeded, location, name, startTime, endTime, createdBy){
+	constructor(id, displayName, attendees, cID, description, isTaProfessorIn, isTaProfessorNeeded, location, name, createdBy, date, startTime, endTime){
 		this.id=id
 		this.displayName=displayName
 		this.attendees=attendees
@@ -476,6 +482,7 @@ rhit.Session=class{
 		this.location=location
 		this.startTime=startTime
 		this.endTime=endTime
+		this.date = date
 		this.createdBy=createdBy
 	}
 }
