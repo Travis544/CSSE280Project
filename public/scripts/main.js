@@ -109,6 +109,10 @@ rhit.SideNavController = class {
     
 rhit.ListPageController = class {
 	constructor() {
+		document.querySelector("#searchGo").addEventListener("click", (event) => {
+			const targetCourse = document.querySelector("#search").value;
+			window.location.href = `/sessions.html?uid=${rhit.fbAuthManager.uid}&courses=${targetCourse}`;
+		})
 
 		document.querySelector("#submitAddSession").addEventListener("click", (event) => {
 			const sessionName = document.querySelector("#inputSessionName").value;
