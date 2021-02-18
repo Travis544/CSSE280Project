@@ -73,13 +73,25 @@ rhit.SideNavController = class {
 		const showAllSessionsItem = document.querySelector("#menuShowAllSessions");
 		if (showAllSessionsItem) {
 			showAllSessionsItem.addEventListener("click", (event) => {
-				window.location.href = "/Sessions.html";
+				window.location.href = "/sessions.html";
 			});
 		}
 		const showMySessionsItem = document.querySelector("#menuShowMySessions");
 		if (showMySessionsItem) {
 			showMySessionsItem.addEventListener("click", (event) => {
-				window.location.href = `/Sessions.html?uid=${rhit.fbAuthManager.uid}`;
+				window.location.href = `/sessions.html?uid=${rhit.fbAuthManager.uid}`;
+			});
+		}
+		const showOngoingItem = document.querySelector("#menuShowOngoingSessions");
+		if (showOngoingItem) {
+			showOngoingItem.addEventListener("click", (event) => {
+				window.location.href = `/sessions.html?uid=${rhit.fbAuthManager.uid}&courses=${rhit.fbUserManager.ongoingCourses}`;
+			});
+		}
+		const showTakenItem = document.querySelector("#menuShowTakenSessions");
+		if (showTakenItem) {
+			showTakenItem.addEventListener("click", (event) => {
+				window.location.href = `/sessions.html?uid=${rhit.fbAuthManager.uid}&courses=${rhit.fbUserManager.takenCourses}`;
 			});
 		}
 		const signOutItem = document.querySelector("#menuSignOut");
@@ -161,6 +173,31 @@ rhit.ListPageController = class {
 		oldContainer.parentElement.appendChild(newContainer)
 		
 	}
+
+	updateCoursesList(courses){
+		console.log("UPDATED")
+		let newContainer=htmlToElement('<div id="sessionListContainer"></div>')
+		let oldContainer=document.querySelector("#sessionListContainer")
+	
+		console.log(rhit.fbSessionsManager.length)
+		for(let i=0; i<rhit.fbSessionsManager.length; i++){
+			const date = rhit.fbSessionsManager.getSessionAtIndex(i).date;
+			const endTime = rhit.fbSessionsManager.getSessionAtIndex(i).endTime;
+			const courseID = rhit.fbSessionsManager.getSessionAtIndex(i).courseID;
+			if(Date.parse(date+" "+endTime) < Date.parse(firebase.firestore.Timestamp.now().toDate()) && !courses.includes(courseID)) {
+
+			} else {
+			let sessionCard=this._createSessionCard(rhit.fbSessionsManager.getSessionAtIndex(i), i)
+			newContainer.appendChild(sessionCard)
+			}
+		}
+		oldContainer.hidden=true;
+		oldContainer.innerHTML=""
+		oldContainer.removeAttribute('id')
+		oldContainer.parentElement.appendChild(newContainer)
+		
+	}
+
 	_createSessionCard(session, index){	
 		let elem= htmlToElement(` 
 		<div id="accordion">
@@ -251,13 +288,16 @@ rhit.ListPageController = class {
 }
 
 rhit.FbSessionsManager = class {
-	constructor(uid) {
+	constructor(uid, courses) {
 		this._uid = uid;
 		this._documentSnapshots = [];
 		this.joinedSessionSnapShots=[]
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_SESSION);
 		this._unsubscribe = null;
-		
+		this._courses = courses
+
+		// rhit.fbUserManager.beginListening(_uid, this)
+		// console.log(rhit.fbUserManager.ongoingCourses);
 	}
 
 	///this will only be called through the user join session function. 
@@ -278,7 +318,7 @@ rhit.FbSessionsManager = class {
 
 	add(sessionName, courseId, description, location, isTaProfessorNeeded, date, startTime, endTime) {
 		// Add a new document with a generated id.
-	
+		
 		this._ref.add({
 				[rhit.FB_KEY_SESSION_NAME] : sessionName,
 				[rhit.FB_KEY_COURSEID]: courseId,
@@ -401,8 +441,15 @@ rhit.FbSessionsManager = class {
 		
 		if (this._uid) {
 			query = query.where( "attendees", "array-contains", this._uid);
+			
 			console.log("DID THIS")
-	
+		}
+
+		
+		if(this._courses) {
+			this._courses = this._courses.split(',');
+			console.log(this._courses);
+			query = query.where("courseId", "in", this._courses)
 		}
 
 		this._unsubscribe = query.onSnapshot((querySnapshot) => {
@@ -457,13 +504,6 @@ rhit.FbSessionsManager = class {
 	
 
 		const createdBy=toRender[index].get('createdBy')
-		// console.log(firebase.firestore.Timestamp.now().toDate());
-		// console.log(Date.parse(firebase.firestore.Timestamp.now().toDate()));
-		// console.log(date+"-"+endTime);
-		// console.log(endTime);
-		// console.log(Date.parse(date+" "+endTime));
-		
-		//attendees, cID, description, isTaProfessorNeeded, isTAProfessorIn, location, name, startTime, endTime
 		return new rhit.Session(id, displayName, attendees,courseID, descrip, isTaProfessorIn, isTaProfessorNeeded,location, name, createdBy, date, startTime, endTime)
 	  }
 }
@@ -576,7 +616,7 @@ rhit.LoginPageController=class{
 rhit.checkForRedirects = function () {
 	// Redirects
 	if (document.querySelector("#loginPage") && rhit.fbAuthManager.isSignedIn) {
-		window.location.href = "/Sessions.html";
+		window.location.href = "/sessions.html";
 	}
 	
 
@@ -1201,7 +1241,6 @@ rhit.ProfilePageController = class {
 			rhit.fbUserManager.updateMajor(major)
 			rhit.fbUserManager.updateIdentity(identity)
 			rhit.fbUserManager.updateName(name).then(() => {
-			//	window.location.href = "/Sessions.html"
 				alert("Update success")
 			});
 		});
@@ -1256,6 +1295,7 @@ rhit.initializePage = function(){
 	const queryString=window.location.search
 	const urlParams=new URLSearchParams(queryString)
 	let uid=urlParams.get("uid")
+	let courses = urlParams.get("courses")
 
 	if(document.querySelector("#loginPage")){
 		rhit.loginPageController=new rhit.LoginPageController();
@@ -1264,7 +1304,7 @@ rhit.initializePage = function(){
 	if(document.querySelector("#sessionListContainer")&&rhit.fbAuthManager.isSignedIn){
 		
 		new rhit.SideNavController();
-		rhit.fbSessionsManager=new rhit.FbSessionsManager(uid)
+		rhit.fbSessionsManager=new rhit.FbSessionsManager(uid, courses)
 		new rhit.ListPageController()
 	
 	}
