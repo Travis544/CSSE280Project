@@ -2,6 +2,16 @@ body {
     background: #DDDDDD;
 }
 
+input[type=text] {
+    float: left;
+    padding: 6px;
+    margin-top: 8px;
+    margin-right: 16px;
+    border: none;
+    font-size: 17px;
+    width: 100%;
+  }
+
 .navbar {
     background-color: #800000;
     color: white;
@@ -48,7 +58,7 @@ body {
 }
 
 
-#sessionListContainer{
+#sessionListContainer, #searchContainer{
     overflow-y:auto;
 }
 
@@ -205,6 +215,20 @@ Switch slider css */
       font-size:40px;
   }
 
+  .search {
+    flex: 1 1 auto;
+    order: 2;
+    outline: none;
+    border: none;
+    border-radius: 0;
+    background: #fff;
+    padding: 10px;
+    font-family: 'Roboto', sans-serif;
+    height: 50px;
+    transition: all 0.05s ease-in-out;
+    -webkit-appearance: none;
+  }
+
 
     #profileCard{
         flex-basis: 30%;
@@ -230,11 +254,9 @@ Switch slider css */
       font-size: 13px;
   }
 
-  .profileSlice .card-body{
+  .profileSlice .card-body #courseSearch{
       padding:10px;
   }
-
-
 
   @media screen and (min-width: 700px) {
     #profilePhoto{
@@ -306,3 +328,6 @@ Switch slider css */
     flex-basis: 30%;
   }
   }
+
+
+  

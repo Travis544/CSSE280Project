@@ -39,6 +39,7 @@
           <i class="material-icons">menu</i>
         </button>
         <a class="navbar-brand" href="#">&nbsp;&nbsp;Exam Review Sessions</a>
+
       </div>
     </header>
     
@@ -50,12 +51,21 @@
         <a id="menuGoToProfilePage" class="list-group-item"><i class="material-icons">account_circle</i>My profile</a>
         <a id="menuShowAllSessions" class="list-group-item"><i class="material-icons">people_alt</i>Show all Sessions</a>
         <a id="menuShowMySessions" class="list-group-item"><i class="material-icons">person</i>Show my Sessions</a>
+        <a id="menuShowOngoingSessions" class="list-group-item"><i class="material-icons">flight_takeoff</i>My Ongoing Courses</a>
+        <a id="menuShowTakenSessions" class="list-group-item"><i class="material-icons">flight_land</i>My Taken Courses</a>
         <a id="menuSignOut" class="list-group-item"><i class="material-icons">logout</i>Sign Out</a>
       </ul>
     </div>
     <main class="bmd-layout-content">
       <div id="listPage" class="container page-container">
-        <div id="sessionListContainer"></div>
+        <div id = "searchContainer" class = "row no-gutters justify-content-center">
+          <div class="col-10"><input id="search" type="text" placeholder="Search Course ID.. For example: MA111"></div>
+          <div class="col-1"><button id = "searchGo">Search</button></div>
+        </div>
+        <div id="sessionListContainer">
+         
+        </div>
+
       </div>
     </main>
   </div>
@@ -98,14 +108,17 @@
             <input id="taProfCheckBox" type="checkbox">
             <span class="slider round"></span>
           </label>
-          <!-- <div class="input-append bootstrap-timepicker">
-            <input id="timepicker1" type="text" class="input-small">
-            <span class="add-on"><i class="icon-time"></i></span>
+          <div><label>Date: </label>
+            <input id="date" type="date">
           </div>
-          <div class="input-append bootstrap-timepicker">
-            <input id="timepicker1" type="text" class="input-small">
-            <span class="add-on"><i class="icon-time"></i></span>
-          </div> -->
+          <br>
+          <div><label>Starting Time: </label>
+            <input id = "startTime" type="time"> 
+          </div>
+          <br>
+          <div><label>Ending Time: </label>
+            <input id = "endTime" type="time">
+           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
@@ -148,6 +161,40 @@
   <script src="/__/firebase/init.js"></script>
   <script src="scripts/rosefire.min.js"></script>
   <script src="scripts/main.js"></script>
+
+  <!-- <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+  <script type="text/javascript" src="jquery.timePicker.js"></script>
+  <script type="text/javascript">
+  jQuery(function() {
+
+    $("#time3, #time4").timePicker();
+        
+    // Store time used by duration.
+    var oldTime = $.timePicker("#time3").getTime();
+    
+    // Keep the duration between the two inputs.
+    $("#time3").change(function() {
+      if ($("#time4").val()) { // Only update when second input has a value.
+        // Calculate duration.
+        var duration = ($.timePicker("#time4").getTime() - oldTime);
+        var time = $.timePicker("#time3").getTime();
+        // Calculate and update the time in the second input.
+        $.timePicker("#time4").setTime(new Date(new Date(time.getTime() + duration)));
+        oldTime = time;
+      }
+    });
+    // Validate.
+    $("#time4").change(function() {
+      if($.timePicker("#time3").getTime() > $.timePicker(this).getTime()) {
+        $(this).addClass("error");
+      }
+      else {
+        $(this).removeClass("error");
+      }
+    });
+    
+  });
+  </script> -->
 </body>
 
 </html>
