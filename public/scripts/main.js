@@ -236,9 +236,9 @@ rhit.ListPageController = class {
 			}
 			cardBody.appendChild(joinButton)
 		}else if(session.createdBy==rhit.fbAuthManager.uid){
-			deleteButton=htmlToElement(' <button type="button"  class="btn btn-danger sessionDeleteButton  sessionButton ">Delete</button>')
+			deleteButton=htmlToElement(' <button type="button"  class="btn btn-danger sessionDeleteButton  sessionButton" data-toggle="modal" data-target="#deleteSessionModal">Delete</button>')
 			deleteButton.onclick=()=>{
-				rhit.fbSessionsManager.deleteSession(session.id)
+				this.currentSession=session.id
 			}
 			cardBody.appendChild(deleteButton)
 		}else if(session.attendees.includes(rhit.fbAuthManager.uid)){
