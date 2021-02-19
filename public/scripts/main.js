@@ -236,13 +236,11 @@ rhit.ListPageController = class {
 			}
 			cardBody.appendChild(joinButton)
 		}else if(session.createdBy==rhit.fbAuthManager.uid){
-			deleteButton=htmlToElement(' <button type="button"  class="btn btn-danger sessionDeleteButton data-toggle="modal" data-target="#deleteSessionButton" sessionButton ">Delete</button>')
+			deleteButton=htmlToElement(' <button type="button"  class="btn btn-danger sessionDeleteButton  sessionButton ">Delete</button>')
 			deleteButton.onclick=()=>{
-				this.currentSession=session.id	
+				rhit.fbSessionsManager.deleteSession(session.id)
 			}
-			
 			cardBody.appendChild(deleteButton)
-
 		}else if(session.attendees.includes(rhit.fbAuthManager.uid)){
 			quitButton=htmlToElement(' <button type="button"  class="btn btn-warning sessionQuitButton  sessionButton  ">Quit</button>')
 			quitButton.onclick=()=>{
@@ -254,14 +252,39 @@ rhit.ListPageController = class {
 		}
 
 		if(session.createdBy==rhit.fbAuthManager.uid){
-			updateButton=htmlToElement(' <button type="button"  class="btn btn-primary updateSessionButton sessionButton  "> Update</button>')
+			updateButton=htmlToElement(`<button type="button"  class="btn btn-primary updateSessionButton sessionButton  " data-toggle = "modal" data-target="#editSessionDialog"> Update</button>`)
+			updateButton.onclick=()=> {
+				document.querySelector("#editSessionName").value = session.name;
+				document.querySelector("#editCourseID").value = session.courseID;
+				document.querySelector("#editDescription").value = session.description;
+				document.querySelector("#editLocation").value = session.location;
+				document.querySelector("#editTaProfCheckBox").checked = session.isTaProfessorNeeded
+				document.querySelector("#editDate").value = session.date
+				document.querySelector("#editStartTime").value = session.startTime
+				document.querySelector("#editEndTime").value = session.endTime
+				document.querySelector("#submitEditSession").addEventListener("click", (event) => {
+					session.name = document.querySelector("#editSessionName").value;
+					session.courseID = document.querySelector("#editCourseID").value;
+					session.description = document.querySelector("#editDescription").value;
+					session.location = document.querySelector("#editLocation").value;
+					session.isTaProfessorNeeded=document.querySelector("#editTaProfCheckBox").checked
+					session.date = document.querySelector("#editDate").value
+					session.startTime = document.querySelector("#editStartTime").value
+					session.endTime = document.querySelector("#editEndTime").value
+					if(Date.parse(date + " " + endTime) <= Date.parse(firebase.firestore.Timestamp)
+					&& Date.parse(date + " " + endTime) <= Date.parse(date + " " + startTime)) {
+						alert("Invalid Time Input Detected: Please check time input")
+					} else {			
+						rhit.fbSessionsManager.updateSession(session.id, session);
+					}
+				});
+			}
 			cardBody.append(updateButton)
-			
 		}
 
 	
 
-		const viewButton=htmlToElement('<button type="button" class="btn sessionButton" data-toggle="modal" data-target="#attendeesModal">View Attendees</button>')
+		const viewButton=htmlToElement('<button type="button" class="btn sessionButton" data-toggle="modal" data-target="#attendeesModal" style="display: flex;">View Attendees</button>')
 
 		viewButton.onclick=()=>{
 			let modalBody=document.querySelector("#attendeesModalBody")
@@ -351,24 +374,26 @@ rhit.FbSessionsManager = class {
 	}
 
 
-	updateSession( session) {
-		this._ref.update({
-				[rhit.FB_KEY_SESSION_NAME] : session.name,
-				[rhit.FB_KEY_COURSEID]:session.courseId,
-				[rhit.FB_KEY_DESCRIPTION]: session.description,
-				[rhit.FB_KEY_LOCATION]: session.location,
-				[rhit.FB_KEY_ISTAPROFESSORNEEDED]: session.isTaProfessorNeeded,
-				[rhit.FB_KEY_DATE]: session.date,
-				[rhit.FB_KEY_STARTTIME]: session.startTime,
-				[rhit.FB_KEY_ENDTIME]: session.endTime
-		})
-		//success, call the call back function
-		.then(()=>{
-			console.log("Document updated");
-		})
-		.catch((error)=>{
-			console.error("Error updating document: ", error);
-		});
+	updateSession(sessionID, session) {
+		if(session.id == sessionID) {
+			this._ref.doc(sessionID).update({
+					[rhit.FB_KEY_SESSION_NAME] : session.name,
+					[rhit.FB_KEY_COURSEID]:session.courseID,
+					[rhit.FB_KEY_DESCRIPTION]: session.description,
+					[rhit.FB_KEY_LOCATION]: session.location,
+					[rhit.FB_KEY_ISTAPROFESSORNEEDED]: session.isTaProfessorNeeded,
+					[rhit.FB_KEY_DATE]: session.date,
+					[rhit.FB_KEY_STARTTIME]: session.startTime,
+					[rhit.FB_KEY_ENDTIME]: session.endTime
+			})
+			//success, call the call back function
+			.then(()=>{
+				console.log("Document updated");
+			})
+			.catch((error)=>{
+				console.error("Error updating document: ", error);
+			});
+		}
 	}
 
 	deleteSession(sessionID){
@@ -1061,6 +1086,10 @@ rhit.FbUserManager = class {
 			
 			document.querySelector("#submitAddSession").addEventListener("click", (event) => {
 				const courseID = document.querySelector("#inputOngoingCourseID").value;
+				if(rhit.fbUserManager.ongoingCourses.includes(courseID) || rhit.fbUserManager.takenCourses.includes(courseID)) {
+					alert("The Added Course Already Exists!")
+					return
+				}
 				let courses = rhit.fbUserManager.ongoingCourses;
 				courses.push(courseID);
 				let checked=document.querySelector("#isProf").checked
@@ -1159,6 +1188,10 @@ rhit.FbUserManager = class {
 			document.querySelector("#submitAddTakenCourse").addEventListener("click", (event) => {
 				const courseID = document.querySelector("#inputTakenCourseID").value;
 				let courses = rhit.fbUserManager.takenCourses;//ok
+				if(rhit.fbUserManager.ongoingCourses.includes(courseID) || rhit.fbUserManager.takenCourses.includes(courseID)) {
+					alert("The Added Course Already Exists!")
+					return
+				}
 				courses.push(courseID);
 				let checked=document.querySelector("#isTa").checked
 				if(checked){

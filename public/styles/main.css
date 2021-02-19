@@ -2,15 +2,7 @@ body {
     background: #DDDDDD;
 }
 
-#searchContainer input[type=text] {
-    float: left;
-    padding: 6px;
-    margin-top: 8px;
-    margin-right: 16px;
-    border: none;
-    font-size: 17px;
-    width: 100%;
-  }
+
 
 .navbar {
     background-color: #800000;
@@ -57,10 +49,42 @@ body {
     max-width: 350px;
 }
 
+.no-gutters>col, .no-gutters>[class*=col-] {
+    padding-right: 2px;
+    padding-left: 2px;
+}
 
-#sessionListContainer, #searchContainer{
+#sessionListContainer{
     overflow-y:auto;
 }
+
+#searchContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    align-items: center;
+}
+
+#searchGo {
+    color: white;
+    background: #800000;
+    margin: auto;
+    background-color: #800000;
+    color: white;
+    border-radius: 5px;
+    border: none;
+}
+
+#search {
+    float: left;
+    margin: auto;
+    border: none;
+    font-size: 17px;
+    width: 100%;
+  }
+
+
 
 
 #rosefireButton {
@@ -215,19 +239,6 @@ Switch slider css */
       font-size:40px;
   }
 
-  .search {
-    flex: 1 1 auto;
-    order: 2;
-    outline: none;
-    border: none;
-    border-radius: 0;
-    background: #fff;
-    padding: 10px;
-    font-family: 'Roboto', sans-serif;
-    height: 50px;
-    transition: all 0.05s ease-in-out;
-    -webkit-appearance: none;
-  }
 
 
     #profileCard{
@@ -282,10 +293,6 @@ Switch slider css */
         padding: 5px;
      }
 
-    
-
-    
-    
     .sessionTitle{
         font-size: 22px;
     }
