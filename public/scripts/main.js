@@ -982,7 +982,6 @@ rhit.FbUserManager = class {
 			return new Promise((resolve, reject)=>{
 				let isIn=false;
 				 isIn=this.checkIfTaOrProfessor(courseID);
-				console.log(isIn)
 				if(isIn){
 					rhit.fbSessionsManager.taOrProfessorJoined(sessionID).then(()=>{
 						resolve()
@@ -1004,7 +1003,6 @@ rhit.FbUserManager = class {
 						if(course.toLowerCase().trim()==courseID.toLowerCase().trim()){
 							return true;	
 						}
-						console.log(courses+" "+courseID)
 					}		
 			}
 
@@ -1083,21 +1081,19 @@ rhit.FbUserManager = class {
 		}
 
 		updateList(){
-			console.log("UPDATED")
 			let newContainer=htmlToElement('<div id="ongoingCourseContainer"></div>')
 			let oldContainer=document.querySelector("#ongoingCourseContainer")
 			let courses = rhit.fbUserManager.ongoingCourses;
 			let coursesTaOrProfFor=rhit.fbUserManager.coursesTaOrProfFor;
-			console.log(courses);
+
 			for(let i=0; i<rhit.fbUserManager.ongoingCourses.length; i++){
 				let isTaOrProf=false
 				if( coursesTaOrProfFor){
-					isTaOrProf=coursesTaOrProfFor.includes(rhit.fbUserManager.takenCourses[i])
+					isTaOrProf=coursesTaOrProfFor.includes(rhit.fbUserManager.ongoingCourses[i])
 				}
 				let courseCard=this._createCourseCard(rhit.fbUserManager.ongoingCourses[i], isTaOrProf)
 				
 				newContainer.appendChild(courseCard)	
-				console.log("cards created");			
 			}
 
 			oldContainer.innerHTML = ``;
@@ -1129,14 +1125,14 @@ rhit.FbUserManager = class {
 		}
 
 		_createCourseCard(courseID, isTaOrProf){
-			if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
-				return htmlToElement(` <div class="card ongoingCourseCard">
-				<div class="card-body" id="ongoingCard${courseID}>
-				<h5 class="card-title">${courseID}</h5>
-				<p>${isTaOrProf?"Professor for this class":""} </p>
-				</div>`)
+			// if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
+			// 	return htmlToElement(` <div class="card ongoingCourseCard">
+			// 	<div class="card-body" id="ongoingCard${courseID}>
+			// 	<h5 class="card-title">${courseID}</h5>
+			// 	<p>${isTaOrProf?"Professor for this class":""} </p>
+			// 	</div>`)
 				
-			}else{
+			// }else{
 				return htmlToElement(` <div class="card ongoingCourseCard">
 				<div class="card-body" id="ongoingCard${courseID}>
 				<h5 class="card-title">${courseID}</h5>
@@ -1145,7 +1141,7 @@ rhit.FbUserManager = class {
 				<button type="button" id="finishButton${courseID}" class="btn b" >Finish</button>
 				</div>
 				</div>`)
-			}	
+			// }	
 		}
 	}
 
@@ -1164,7 +1160,6 @@ rhit.FbUserManager = class {
 				const courseID = document.querySelector("#inputTakenCourseID").value;
 				let courses = rhit.fbUserManager.takenCourses;//ok
 				courses.push(courseID);
-				console.log("courses", courses);//can print
 				let checked=document.querySelector("#isTa").checked
 				if(checked){
 					if(rhit.fbUserManager.coursesTaOrProfFor.includes(courseID)) {
@@ -1191,12 +1186,10 @@ rhit.FbUserManager = class {
 			let coursesTaOrProfFor=rhit.fbUserManager.coursesTaOrProfFor
 
 			for(let i=0; i<rhit.fbUserManager.takenCourses.length; i++){
-				// /console.log(rhit.fbUserManager.takenCourses[i]);
 				let isTaOrProf=false
 				if( coursesTaOrProfFor){
 					isTaOrProf=coursesTaOrProfFor.includes(rhit.fbUserManager.takenCourses[i])
 				}
-				console.log(isTaOrProf)
 				let courseCard=this._createCourseCard(rhit.fbUserManager.takenCourses[i], isTaOrProf)
 				newContainer.appendChild(courseCard)
 			}
@@ -1232,26 +1225,24 @@ rhit.FbUserManager = class {
 			}
 		}
 
-		_createCourseCard(courseID, isTaOrProf){
-
-			
-			if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
-					return htmlToElement(` <div class="card">
-				<div class="card-body">
-				<h5 class="card-title">${courseID}</h5>
-				<p>${isTaOrProf?"Ta for this class":""} </p>
-				</div>
-			</div>`)
-			}else{
-				return htmlToElement(` <div class="card">
-			<div class="card-body">
+		_createCourseCard(courseID, isTaOrProf){			
+			// if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
+			// 		return htmlToElement(` <div class="card">
+			// 	<div class="card-body">
+			// 	<h5 class="card-title">${courseID}</h5>
+			// 	<p>${isTaOrProf?"Ta for this class":""} </p>
+			// 	</div>
+			// </div>`)
+			// }else{
+			return htmlToElement(
+				` <div class="card">
+			<div class="card-body" id="takenCard${courseID}>
 			<h5 class="card-title">${courseID}</h5>
 			<p>${isTaOrProf?"Ta for this class":""} </p>
 			<button type="button" id="delete${courseID}" class="btn b" >DELETE</button>
 			</div>
 			</div>`)
-			}
-			
+			// }			
 		}
 	}
 
