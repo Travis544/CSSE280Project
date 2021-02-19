@@ -109,6 +109,14 @@ rhit.SideNavController = class {
     
 rhit.ListPageController = class {
 	constructor() {
+
+		//for button
+		this.currentSession=null
+
+
+		document.querySelector("#deleteSessionButton").addEventListener('click', (event)=>{
+			rhit.fbSessionsManager.deleteSession(this.currentSession)
+		})
 		document.querySelector("#searchGo").addEventListener("click", (event) => {
 			const targetCourse = document.querySelector("#search").value;
 			window.location.href = `/sessions.html?uid=${rhit.fbAuthManager.uid}&courses=${targetCourse}`;
@@ -124,7 +132,7 @@ rhit.ListPageController = class {
 			const startTime = document.querySelector("#startTime").value
 			const endTime = document.querySelector("#endTime").value
 			if(Date.parse(date + " " + endTime) <= Date.parse(firebase.firestore.Timestamp)
-			|| Date.parse(date + " " + endTime) <= Date.parse(date + " " + startTime)) {
+			&& Date.parse(date + " " + endTime) <= Date.parse(date + " " + startTime)) {
 				alert("Invalid Time Input Detected: Please check time input")
 			} else {			
 				rhit.fbSessionsManager.add(sessionName, courseId, description, location, isTaProfessorNeeded, date, startTime, endTime);
@@ -165,7 +173,7 @@ rhit.ListPageController = class {
 			const date = rhit.fbSessionsManager.getSessionAtIndex(i).date;
 			const endTime = rhit.fbSessionsManager.getSessionAtIndex(i).endTime;
 			if(Date.parse(date+" "+endTime) < Date.parse(firebase.firestore.Timestamp.now().toDate())) {
-
+				rhit.fbSessionsManager.deleteSession(rhit.fbSessionsManager.getSessionAtIndex(i).id)
 			} else {
 			let sessionCard=this._createSessionCard(rhit.fbSessionsManager.getSessionAtIndex(i), i)
 			newContainer.appendChild(sessionCard)
@@ -178,29 +186,6 @@ rhit.ListPageController = class {
 		
 	}
 
-	updateCoursesList(courses){
-		console.log("UPDATED")
-		let newContainer=htmlToElement('<div id="sessionListContainer"></div>')
-		let oldContainer=document.querySelector("#sessionListContainer")
-	
-		console.log(rhit.fbSessionsManager.length)
-		for(let i=0; i<rhit.fbSessionsManager.length; i++){
-			const date = rhit.fbSessionsManager.getSessionAtIndex(i).date;
-			const endTime = rhit.fbSessionsManager.getSessionAtIndex(i).endTime;
-			const courseID = rhit.fbSessionsManager.getSessionAtIndex(i).courseID;
-			if(Date.parse(date+" "+endTime) < Date.parse(firebase.firestore.Timestamp.now().toDate()) && !courses.includes(courseID)) {
-
-			} else {
-			let sessionCard=this._createSessionCard(rhit.fbSessionsManager.getSessionAtIndex(i), i)
-			newContainer.appendChild(sessionCard)
-			}
-		}
-		oldContainer.hidden=true;
-		oldContainer.innerHTML=""
-		oldContainer.removeAttribute('id')
-		oldContainer.parentElement.appendChild(newContainer)
-		
-	}
 
 	_createSessionCard(session, index){	
 		let elem= htmlToElement(` 
@@ -243,6 +228,7 @@ rhit.ListPageController = class {
 		let joinButton=null
 		let deleteButton=null
 		let quitButton=null
+		let updateButton=null
 		if(!session.attendees.includes(rhit.fbAuthManager.uid)){
 			 joinButton=htmlToElement(' <button type="button"  class="btn btn-primary sessionJoinButton sessionButton">Join</button>')
 			 joinButton.onclick=()=>{
@@ -250,10 +236,11 @@ rhit.ListPageController = class {
 			}
 			cardBody.appendChild(joinButton)
 		}else if(session.createdBy==rhit.fbAuthManager.uid){
-			deleteButton=htmlToElement(' <button type="button"  class="btn btn-danger sessionDeleteButton  sessionButton ">Delete</button>')
+			deleteButton=htmlToElement(' <button type="button"  class="btn btn-danger sessionDeleteButton data-toggle="modal" data-target="#deleteSessionButton" sessionButton ">Delete</button>')
 			deleteButton.onclick=()=>{
-				rhit.fbSessionsManager.deleteSession(session.id)
+				this.currentSession=session.id	
 			}
+			
 			cardBody.appendChild(deleteButton)
 
 		}else if(session.attendees.includes(rhit.fbAuthManager.uid)){
@@ -261,9 +248,18 @@ rhit.ListPageController = class {
 			quitButton.onclick=()=>{
 				rhit.fbUserManager.quitSession(session.id)
 			}
+
 			cardBody.appendChild(quitButton)
 
 		}
+
+		if(session.createdBy==rhit.fbAuthManager.uid){
+			updateButton=htmlToElement(' <button type="button"  class="btn btn-primary updateSessionButton sessionButton  "> Update</button>')
+			cardBody.append(updateButton)
+			
+		}
+
+	
 
 		const viewButton=htmlToElement('<button type="button" class="btn sessionButton" data-toggle="modal" data-target="#attendeesModal">View Attendees</button>')
 
@@ -352,6 +348,27 @@ rhit.FbSessionsManager = class {
 			.catch(function (error) {
 				console.error("Error adding document: ", error);
 			});
+	}
+
+
+	updateSession( session) {
+		this._ref.update({
+				[rhit.FB_KEY_SESSION_NAME] : session.name,
+				[rhit.FB_KEY_COURSEID]:session.courseId,
+				[rhit.FB_KEY_DESCRIPTION]: session.description,
+				[rhit.FB_KEY_LOCATION]: session.location,
+				[rhit.FB_KEY_ISTAPROFESSORNEEDED]: session.isTaProfessorNeeded,
+				[rhit.FB_KEY_DATE]: session.date,
+				[rhit.FB_KEY_STARTTIME]: session.startTime,
+				[rhit.FB_KEY_ENDTIME]: session.endTime
+		})
+		//success, call the call back function
+		.then(()=>{
+			console.log("Document updated");
+		})
+		.catch((error)=>{
+			console.error("Error updating document: ", error);
+		});
 	}
 
 	deleteSession(sessionID){
@@ -781,14 +798,13 @@ rhit.FbUserManager = class {
 		}
 
 		//if the user marks that they are a ta or prof for a particular course, save that.
-		updateCoursesIsTaOrProfFor(courseID){
+		updateCoursesIsTaOrProfFor(courses){
 			const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid);
 			return userRef.update({
-					[rhit.FB_KEY_COURSE_ISTA_OR_PROF_FOR]:  firebase.firestore.FieldValue.arrayUnion(courseID)
+					[rhit.FB_KEY_COURSE_ISTA_OR_PROF_FOR]:  courses
 				})
 				.then(() => {
-					//console.log("Document successfully updated!");
-					this.updateUserSessionsTaProfStatus(courseID)
+					console.log("Document successfully updated!");
 				})
 				.catch(function (error) {
 					console.error("Error updating document: ", error);
@@ -1032,8 +1048,6 @@ rhit.FbUserManager = class {
 				return null
 			}
 		}
-
-
 	}
 
 
@@ -1053,7 +1067,14 @@ rhit.FbUserManager = class {
 				courses.push(courseID);
 				let checked=document.querySelector("#isProf").checked
 				if(checked){
-					rhit.fbUserManager.updateCoursesIsTaOrProfFor(courseID)
+					if(rhit.fbUserManager.coursesTaOrProfFor.includes(courseID)) {
+						//do nothing
+					} else {
+						let taCourses = rhit.fbUserManager.coursesTaOrProfFor
+						taCourses.push(courseID)
+						rhit.fbUserManager.updateCoursesIsTaOrProfFor(taCourses)
+						rhit.fbUserManager.updateUserAfterSessionDelete(courseID)
+					}
 				}
 				rhit.fbUserManager.updateOngoingCourses(courses).then(() => {
 					this.updateList();
@@ -1098,7 +1119,6 @@ rhit.FbUserManager = class {
 					rhit.fbUserManager.updateOngoingCourses(courses);
 					rhit.fbUserManager.updateTakenCourses(takenCourses);
 					this.updateList();
-					TakenCoursesController.updateList()
 				});
 			}
 			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
@@ -1147,7 +1167,14 @@ rhit.FbUserManager = class {
 				console.log("courses", courses);//can print
 				let checked=document.querySelector("#isTa").checked
 				if(checked){
-					rhit.fbUserManager.updateCoursesIsTaOrProfFor(courseID)
+					if(rhit.fbUserManager.coursesTaOrProfFor.includes(courseID)) {
+						//do nothing
+					} else {
+						let taCourses = rhit.fbUserManager.coursesTaOrProfFor
+						taCourses.push(courseID)
+						rhit.fbUserManager.updateCoursesIsTaOrProfFor(taCourses)
+						rhit.fbUserManager.updateUserAfterSessionDelete(courseID)
+					}
 				}
 				rhit.fbUserManager.updateTakenCourses(courses).then(() => {
 					//window.location.href = "/profile.html"
@@ -1179,8 +1206,21 @@ rhit.FbUserManager = class {
 			oldContainer.parentElement.appendChild(newContainer)
 			for(let i = 0; i < rhit.fbUserManager.takenCourses.length; i++) {
 				document.querySelector("#delete" + rhit.fbUserManager.takenCourses[i]).addEventListener("click", (event) => {
+					let id = rhit.fbUserManager.takenCourses[i];
 					courses.splice(i,1);
 					rhit.fbUserManager.updateTakenCourses(courses);
+					let takenCourses = rhit.fbUserManager.coursesTaOrProfFor
+					for(let j = 0; j < rhit.fbUserManager.coursesTaOrProfFor.length; j++) {
+						console.log("in array "+rhit.fbUserManager.coursesTaOrProfFor[j]);
+						console.log("need to drop " + id);
+						if(rhit.fbUserManager.coursesTaOrProfFor[j] == id) {
+							console.log("Found: ");
+							console.log("in array "+rhit.fbUserManager.coursesTaOrProfFor[j]);
+							console.log("need to drop " + id);
+							takenCourses.splice(j,1)
+						}
+					}
+					rhit.fbUserManager.updateCoursesIsTaOrProfFor(takenCourses)
 					this.updateList();
 				});
 			}

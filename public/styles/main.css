@@ -2,7 +2,7 @@ body {
     background: #DDDDDD;
 }
 
-input[type=text] {
+#searchContainer input[type=text] {
     float: left;
     padding: 6px;
     margin-top: 8px;

@@ -28,7 +28,27 @@
         <a class="nav-link  nav-content"   href="#">My Sessions</a>
       </li>
     </ul> -->
-    
+
+    <!-- for edit -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="editModal" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 
   <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
@@ -73,6 +93,15 @@
   <button id="fab" type="button" class="btn bmd-btn-fab" data-toggle="modal" data-target="#addSessionDialog">
     <i class="material-icons">add</i>
   </button>
+
+
+  
+
+
+
+
+
+  
   
   <!-- Modals -->
   <div class="modal fade" id="addSessionDialog" tabindex="-1" role="dialog" aria-labelledby="Add quote dialog"
@@ -129,6 +158,27 @@
 
   </div>
 
+  <div class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modal title</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete this session?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="deleteSessionButton" data-dismiss="modal" class="btn btn-primary">Yes</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
   <div class="modal fade" id="attendeesModal" tabindex="-1" role="dialog" aria-labelledby="attendeesModal" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
