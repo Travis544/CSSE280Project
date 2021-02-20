@@ -262,9 +262,14 @@ Switch slider css */
   }
 
   .courseIDText{
-      font-size: 13px;
+      font-size: 27px;
+      
   }
 
+
+  .sessionTitle{
+    font-size:10px;
+  }
   .profileSlice .card-body #courseSearch{
       padding:10px;
   }

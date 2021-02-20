@@ -131,8 +131,9 @@ rhit.ListPageController = class {
 			const date = document.querySelector("#date").value
 			const startTime = document.querySelector("#startTime").value
 			const endTime = document.querySelector("#endTime").value
-			if(Date.parse(date + " " + endTime) <= Date.parse(firebase.firestore.Timestamp)
-			&& Date.parse(date + " " + endTime) <= Date.parse(date + " " + startTime)) {
+			Date.parse(date + " " + endTime)
+
+			if(Date.parse(date + " " + endTime) <= Date.parse(date + " " + startTime)) {
 				alert("Invalid Time Input Detected: Please check time input")
 			} else {			
 				rhit.fbSessionsManager.add(sessionName, courseId, description, location, isTaProfessorNeeded, date, startTime, endTime);
@@ -193,8 +194,9 @@ rhit.ListPageController = class {
 		<div class="card">
 		<div class="card-header" >
 		<h1 class="mb-0">
-			<button class="btn btn-link accorButton" data-toggle="collapse" data-target="#collapse${index}" aria-expanded="true" aria-controls="collapseOne">
-			<div class="attendeeText"><div class="sessionTitle">${session.name} <div class="courseIDText">CourseID: ${session.courseID}</div> </div> <div class="sessionTitle">Attendees: ${session.attendees?session.attendees.length:0}</div> </div>
+			<button class=" btn btn-link accorButton" data-toggle="collapse" data-target="#collapse${index}" aria-expanded="true" aria-controls="collapseOne">
+			<div class="courseIDText">Course ID: ${session.courseID}</div>
+			<div class="sessionTitle">${session.name}</div>
 			
 			</button>
 		</h1>
@@ -204,11 +206,11 @@ rhit.ListPageController = class {
 		<div class="card-body sessionBody">
 			<p class="card-text sessionCreatedBy">Created By: ${session.createdBy} </p>
 			<hr>
-			<p  class="card-text sessionDate" >ON ${session.date} From ${session.startTime} to ${session.endTime}</p>
+			<p  class="card-text sessionDate" >${session.date} From ${session.startTime} to ${session.endTime}</p>
 			<hr>
-			<p class="card-text sessionLocation">Description: ${session.location}</p>
+			<p class="card-text sessionLocation">Description: ${session.description}</p>
 			<hr>
-			<p class="card-text sessionDecription">Location: ${session.description}</p>
+			<p class="card-text sessionDecription">Location: ${session.location}</p>
 			<hr>
 		</div>
 		</div>
@@ -474,44 +476,33 @@ rhit.FbSessionsManager = class {
 		return this._ref.doc(sessionID).update({
 			taAndProfessors: firebase.firestore.FieldValue.arrayRemove(rhit.fbAuthManager.uid)
 		}).then(()=>{
-			console.log("removed user succcessfully")
+			console.log("removed session succcessfully")
 		})
 	}
 
 
 	beginListening(changeListener) {
 
-		let query = this._ref
-		
-		//.orderBy('startTime', "desc")
+		let query = firebase.firestore().collection(rhit.FB_COLLECTION_SESSION);
 		
 		if (this._uid) {
 			query = query.where( "attendees", "array-contains", this._uid);
-			
 			console.log("DID THIS")
 		}
-
 		
 		if(this._courses) {
+			query = firebase.firestore().collection(rhit.FB_COLLECTION_SESSION);
 			this._courses = this._courses.split(',');
 			console.log(this._courses);
 			query = query.where("courseId", "in", this._courses)
 		}
 
 		this._unsubscribe = query.onSnapshot((querySnapshot) => {
-
 			this._documentSnapshots = querySnapshot.docs;
-			//console.log(JSON.stringify(this._documentSnapshots))
-			//	console.log(querySnapshot.docs)
-		//	console.log("Change listener!")
-		
 			changeListener();
 		});
-
-	
 	}
 
-	
 
 	stopListening() {
 		this._unsubscribe();
@@ -786,7 +777,7 @@ rhit.FbUserManager = class {
 		}
 
 			/*this function handles the case when a user joined a session
-			and went to the profile page to add or update a session for themselves to be a ta in .
+			and went to the profile page to add or update a course for themselves to be a ta in .
 		*/
 		updateUserSessionsTaProfStatus(courseID){
 			let sessionsJoined=this._document.get(rhit.FB_KEY_JOINEDSESSIONIDS)
@@ -794,7 +785,7 @@ rhit.FbUserManager = class {
 			for(let session of sessionsJoined){
 				
 				this.taProfStatusHelper(ref, session).then((doc)=>{
-					console.log(doc.get("courseId"))
+					//console.log(doc.get("courseId"))
 					if(doc.get("courseId").toLowerCase().trim()==courseID.toLowerCase().trim()){
 						this.updateTaProfStatusHelper(ref, session)
 					}
@@ -821,6 +812,28 @@ rhit.FbUserManager = class {
 				isTaProfessorIn: true
 			})
 		}
+
+
+		updateUserDropOrDeleteCourseTaOrProfessorFor(courseID){
+			rhit.fbSessionsManager=new rhit.FbSessionsManager();
+			let sessionsJoined=this._document.get(rhit.FB_KEY_JOINEDSESSIONIDS)
+			for(let session of sessionsJoined){
+				let isTaOrProf=this.checkIfTaOrProfessor(courseID)
+				if(isTaOrProf){
+					rhit.fbSessionsManager.removeSessionTaAndProfessor(session).then(()=>{
+						rhit.FbSessionsManager.taOrProfessorRemoved().then(()=>{
+							const userRef = this._collectoinRef.doc(rhit.fbAuthManager.uid)
+							userRef.update({
+								[rhit.FB_KEY_COURSE_ISTA_OR_PROF_FOR]:firebase.firestore.FieldValue.arrayRemove(courseID)
+							}).then(()=>{
+								console.log("success")
+							})
+						})
+					})
+				}
+			}
+		}
+
 
 		//if the user marks that they are a ta or prof for a particular course, save that.
 		updateCoursesIsTaOrProfFor(courses){
@@ -1005,8 +1018,9 @@ rhit.FbUserManager = class {
 
 		didTaOrProfJoin(sessionID,courseID){
 			return new Promise((resolve, reject)=>{
-				let isIn=false;
-				 isIn=this.checkIfTaOrProfessor(courseID);
+				
+				 let isIn=this.checkIfTaOrProfessor(courseID);
+				
 				if(isIn){
 					rhit.fbSessionsManager.taOrProfessorJoined(sessionID).then(()=>{
 						resolve()
@@ -1094,14 +1108,14 @@ rhit.FbUserManager = class {
 				courses.push(courseID);
 				let checked=document.querySelector("#isProf").checked
 				if(checked){
-					if(rhit.fbUserManager.coursesTaOrProfFor.includes(courseID)) {
+					//if(rhit.fbUserManager.coursesTaOrProfFor.includes(courseID)) {
 						//do nothing
-					} else {
+				//	} else {
 						let taCourses = rhit.fbUserManager.coursesTaOrProfFor
 						taCourses.push(courseID)
 						rhit.fbUserManager.updateCoursesIsTaOrProfFor(taCourses)
-						rhit.fbUserManager.updateUserAfterSessionDelete(courseID)
-					}
+						//rhit.fbUserManager.updateUserAfterSessionDelete(courseID)
+					//}
 				}
 				rhit.fbUserManager.updateOngoingCourses(courses).then(() => {
 					this.updateList();
@@ -1133,7 +1147,9 @@ rhit.FbUserManager = class {
 				document.querySelector("#dropButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
 					courses.splice(i,1);
 					rhit.fbUserManager.updateOngoingCourses(courses);
-					this.updateList();
+					//this.updateList();
+					console.log(rhit.fbUserManager.ongoingCourses);
+					//rhit.fbUserManager.updateUserDropOrDeleteCourseTaOrProfessorFor( rhit.fbUserManager.ongoingCourses[i])
 				});
 				
 				document.querySelector("#finishButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
@@ -1141,11 +1157,18 @@ rhit.FbUserManager = class {
 					courses.splice(i,1);
 					let takenCourses = rhit.fbUserManager.takenCourses;
 					takenCourses.push(finishedID);
-					rhit.fbUserManager.updateOngoingCourses(courses);
-					rhit.fbUserManager.updateTakenCourses(takenCourses);
-					this.updateList();
+					rhit.fbUserManager.updateOngoingCourses(courses).then(()=>{
+
+					}).then(()=>{	
+						rhit.fbUserManager.updateTakenCourses(takenCourses).then(()=>{
+							//this.fbUserManager.updateUserDropOrDeleteCourseTaOrProfessorFor( rhit.fbUserManager.ongoingCourses[i])
+						})
+					
+					//this.updateList();
 				});
-			}
+			})
+		}
+
 			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
 				document.querySelector("#ongoingCourseAddBtn").hidden=true;
 			}else{
@@ -1195,14 +1218,15 @@ rhit.FbUserManager = class {
 				courses.push(courseID);
 				let checked=document.querySelector("#isTa").checked
 				if(checked){
-					if(rhit.fbUserManager.coursesTaOrProfFor.includes(courseID)) {
-						//do nothing
-					} else {
+					// if(rhit.fbUserManager.coursesTaOrProfFor.includes(courseID)) {
+						
 						let taCourses = rhit.fbUserManager.coursesTaOrProfFor
 						taCourses.push(courseID)
-						rhit.fbUserManager.updateCoursesIsTaOrProfFor(taCourses)
-						rhit.fbUserManager.updateUserAfterSessionDelete(courseID)
-					}
+						rhit.fbUserManager.updateCoursesIsTaOrProfFor(taCourses).then(()=>{
+							rhit.fbUserManager.updateUserSessionsTaProfStatus(courseID)
+						})
+					//	rhit.fbUserManager.updateUserAfterSessionDelete(courseID)
+					//}
 				}
 				rhit.fbUserManager.updateTakenCourses(courses).then(() => {
 					//window.location.href = "/profile.html"
@@ -1234,8 +1258,13 @@ rhit.FbUserManager = class {
 				document.querySelector("#delete" + rhit.fbUserManager.takenCourses[i]).addEventListener("click", (event) => {
 					let id = rhit.fbUserManager.takenCourses[i];
 					courses.splice(i,1);
-					rhit.fbUserManager.updateTakenCourses(courses);
-					let takenCourses = rhit.fbUserManager.coursesTaOrProfFor
+					//let takenCourses=[]
+
+				//	this.fbUserManager.updateUserDropOrDeleteCourseTaOrProfessorFor( rhit.fbUserManager.takenCourses[i])
+					rhit.fbUserManager.updateTakenCourses(courses).then(()=>{
+					// 	takenCourses= rhit.fbUserManager.coursesTaOrProfFor;
+					 })
+					
 					for(let j = 0; j < rhit.fbUserManager.coursesTaOrProfFor.length; j++) {
 						console.log("in array "+rhit.fbUserManager.coursesTaOrProfFor[j]);
 						console.log("need to drop " + id);
@@ -1246,6 +1275,8 @@ rhit.FbUserManager = class {
 							takenCourses.splice(j,1)
 						}
 					}
+
+					
 					rhit.fbUserManager.updateCoursesIsTaOrProfFor(takenCourses)
 					this.updateList();
 				});
@@ -1271,7 +1302,7 @@ rhit.FbUserManager = class {
 				` <div class="card">
 			<div class="card-body" id="takenCard${courseID}>
 			<h5 class="card-title">${courseID}</h5>
-			<p>${isTaOrProf?"Ta for this class":""} </p>
+			<p>${isTaOrProf?"Ta or Professor for this class":""} </p>
 			<button type="button" id="delete${courseID}" class="btn b" >DELETE</button>
 			</div>
 			</div>`)
