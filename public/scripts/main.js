@@ -1163,6 +1163,9 @@ rhit.FbUserManager = class {
 			oldContainer.parentElement.appendChild(newContainer)
 
 			for(let i = 0; i < rhit.fbUserManager.ongoingCourses.length; i++) {
+				if(	document.querySelector("#dropButton" + rhit.fbUserManager.ongoingCourses[i])){
+
+				
 				document.querySelector("#dropButton" + rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
 					let dropCourse=rhit.fbUserManager.ongoingCourses[i]
 					
@@ -1172,6 +1175,10 @@ rhit.FbUserManager = class {
 					//this.updateList();
 					rhit.fbUserManager.updateUserDropOrDeleteCourseTaOrProfessorFor(dropCourse)
 				});
+
+			}
+
+			if(	document.querySelector("#finishButton" +  rhit.fbUserManager.ongoingCourses[i])){
 				
 				document.querySelector("#finishButton" +  rhit.fbUserManager.ongoingCourses[i]).addEventListener("click", (event) => {
 					let finishedID = rhit.fbUserManager.ongoingCourses[i];
@@ -1188,6 +1195,7 @@ rhit.FbUserManager = class {
 					//this.updateList();
 				});
 			})
+			}
 		}
 
 			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
@@ -1198,14 +1206,14 @@ rhit.FbUserManager = class {
 		}
 
 		_createCourseCard(courseID, isTaOrProf){
-			// if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
-			// 	return htmlToElement(` <div class="card ongoingCourseCard">
-			// 	<div class="card-body" id="ongoingCard${courseID}>
-			// 	<h5 class="card-title">${courseID}</h5>
-			// 	<p>${isTaOrProf?"Professor for this class":""} </p>
-			// 	</div>`)
+			if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
+				return htmlToElement(` <div class="card ongoingCourseCard">
+				<div class="card-body" id="ongoingCard${courseID}>
+				<h5 class="card-title">${courseID}</h5>
+				<p>${isTaOrProf?"Professor for this class":""} </p>
+				</div>`)
 				
-			// }else{
+			}else{
 				return htmlToElement(` <div class="card ongoingCourseCard">
 				<div class="card-body" id="ongoingCard${courseID}>
 				<h5 class="card-title">${courseID}</h5>
@@ -1214,7 +1222,7 @@ rhit.FbUserManager = class {
 				<button type="button" id="finishButton${courseID}" class="btn b" >Finish</button>
 				</div>
 				</div>`)
-			// }	
+			}	
 		}
 	}
 
@@ -1276,6 +1284,7 @@ rhit.FbUserManager = class {
 			oldContainer.removeAttribute('id')
 			oldContainer.parentElement.appendChild(newContainer)
 			for(let i = 0; i < rhit.fbUserManager.takenCourses.length; i++) {
+			if(	document.querySelector("#delete" + rhit.fbUserManager.takenCourses[i])){
 				document.querySelector("#delete" + rhit.fbUserManager.takenCourses[i]).addEventListener("click", (event) => {
 					let id = rhit.fbUserManager.takenCourses[i];
 					courses.splice(i,1);
@@ -1305,6 +1314,8 @@ rhit.FbUserManager = class {
 					// rhit.fbUserManager.updateCoursesIsTaOrProfFor(takenCourses)
 					this.updateList();
 				});
+
+				}
 			}
 			console.log(this.uid)
 			if(this.uid&&this.uid!=rhit.fbAuthManager.uid){
@@ -1315,14 +1326,14 @@ rhit.FbUserManager = class {
 		}
 
 		_createCourseCard(courseID, isTaOrProf){			
-			// if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
-			// 		return htmlToElement(` <div class="card">
-			// 	<div class="card-body">
-			// 	<h5 class="card-title">${courseID}</h5>
-			// 	<p>${isTaOrProf?"Ta for this class":""} </p>
-			// 	</div>
-			// </div>`)
-			// }else{
+			if(this.uid&&rhit.fbAuthManager.uid!=this.uid){
+					return htmlToElement(` <div class="card">
+				<div class="card-body">
+				<h5 class="card-title">${courseID}</h5>
+				<p>${isTaOrProf?"Ta for this class":""} </p>
+				</div>
+			</div>`)
+			}else{
 			return htmlToElement(
 				` <div class="card">
 			<div class="card-body" id="takenCard${courseID}>
@@ -1331,7 +1342,7 @@ rhit.FbUserManager = class {
 			<button type="button" id="delete${courseID}" class="btn b" >DELETE</button>
 			</div>
 			</div>`)
-			// }			
+			}			
 		}
 	}
 
